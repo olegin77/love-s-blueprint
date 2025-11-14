@@ -4,6 +4,7 @@ import { Features } from "@/components/landing/Features";
 import { AIShowcase } from "@/components/landing/AIShowcase";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { Stats } from "@/components/landing/Stats";
+import { Pricing } from "@/components/landing/Pricing";
 import { CTA } from "@/components/landing/CTA";
 import { Footer } from "@/components/landing/Footer";
 
@@ -13,11 +14,18 @@ const Index = () => {
       <Header />
       <main>
         <Hero />
-        <Features />
-        <AIShowcase />
+        <div id="features">
+          <Features />
+        </div>
+        <div id="marketplace-section">
+          <AIShowcase />
+        </div>
         <HowItWorks />
         <Stats />
-        <CTA />
+        <Pricing />
+        <div id="about">
+          <CTA />
+        </div>
       </main>
       <Footer />
     </div>
