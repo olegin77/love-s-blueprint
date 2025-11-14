@@ -67,6 +67,10 @@ export const AIShowcase = () => {
   }, []);
 
   const handleNavigate = (link: string) => {
+    if (link.startsWith('/marketplace')) {
+      navigate(link);
+      return;
+    }
     if (isAuthenticated) {
       navigate(link);
     } else {
