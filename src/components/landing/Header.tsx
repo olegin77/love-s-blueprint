@@ -12,12 +12,16 @@ export const Header = () => {
 
   const navigation = [
     { name: t('nav.home'), href: "features" },
-    { name: t('marketplace.title'), href: "marketplace-section" },
+    { name: t('marketplace.title'), href: "/marketplace" },
     { name: "Цены", href: "pricing" },
     { name: "О нас", href: "about" },
   ];
 
   const scrollToSection = (sectionId: string) => {
+    if (sectionId.startsWith('/')) {
+      navigate(sectionId);
+      return;
+    }
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });

@@ -12,6 +12,15 @@ import { Search, Star, MapPin, Heart, SlidersHorizontal } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
+const DEMO_VENDORS = [
+  { id: 'demo-1', business_name: 'Royal Palace Venue', category: 'venue', location: 'Ташкент', price_range_min: 15000000, price_range_max: 60000000, rating: 4.8, total_reviews: 124, verified: true, isDemo: true },
+  { id: 'demo-2', business_name: 'Garden Bliss Venue', category: 'venue', location: 'Самарканд', price_range_min: 10000000, price_range_max: 35000000, rating: 4.6, total_reviews: 78, verified: true, isDemo: true },
+  { id: 'demo-3', business_name: 'UzPhoto Studio', category: 'photographer', location: 'Ташкент', price_range_min: 5000000, price_range_max: 15000000, rating: 4.9, total_reviews: 210, verified: true, isDemo: true },
+  { id: 'demo-4', business_name: 'Sam Video Pro', category: 'videographer', location: 'Самарканд', price_range_min: 7000000, price_range_max: 18000000, rating: 4.7, total_reviews: 95, verified: true, isDemo: true },
+  { id: 'demo-5', business_name: 'Flora Boutique', category: 'florist', location: 'Бухара', price_range_min: 3000000, price_range_max: 10000000, rating: 4.5, total_reviews: 62, verified: true, isDemo: true },
+  { id: 'demo-6', business_name: 'Melody Band', category: 'music', location: 'Ташкент', price_range_min: 6000000, price_range_max: 20000000, rating: 4.7, total_reviews: 140, verified: true, isDemo: true },
+];
+
 const Marketplace = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -40,10 +49,14 @@ const Marketplace = () => {
         .order("rating", { ascending: false });
 
       if (error) throw error;
-      setVendors(data || []);
+      if (!data || data.length === 0) {
+        setVendors(DEMO_VENDORS);
+      } else {
+        setVendors(data);
+      }
       
       // Extract unique locations
-      const uniqueLocations = Array.from(new Set(data?.map(v => v.location).filter(Boolean))) as string[];
+      const uniqueLocations = Array.from(new Set((data && data.length > 0 ? data : DEMO_VENDORS).map(v => v.location).filter(Boolean))) as string[];
       setLocations(uniqueLocations);
     } catch (error) {
       console.error("Error fetching vendors:", error);
@@ -292,20 +305,22 @@ const Marketplace = () => {
                             {vendor.verified && <Badge variant="default">Проверен</Badge>}
                           </CardDescription>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => toggleFavorite(vendor.id, e)}
-                          className="shrink-0"
-                        >
-                          <Heart 
-                            className={`w-5 h-5 ${
-                              favorites.has(vendor.id) 
-                                ? 'fill-primary text-primary' 
-                                : 'text-muted-foreground'
-                            }`} 
-                          />
-                        </Button>
+                        {!vendor.isDemo && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => toggleFavorite(vendor.id, e)}
+                            className="shrink-0"
+                          >
+                            <Heart 
+                              className={`w-5 h-5 ${
+                                favorites.has(vendor.id) 
+                                  ? 'fill-primary text-primary' 
+                                  : 'text-muted-foreground'
+                              }`} 
+                            />
+                          </Button>
+                        )}
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">

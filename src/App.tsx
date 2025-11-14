@@ -42,8 +42,8 @@ const App = () => (
           
           {/* Protected Routes */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
-          <Route path="/marketplace/:vendorId" element={<ProtectedRoute><VendorDetail /></ProtectedRoute>} />
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/marketplace/:vendorId" element={<VendorDetail />} />
           <Route path="/vendor-dashboard" element={<ProtectedRoute><VendorDashboard /></ProtectedRoute>} />
           <Route path="/ai-assistant" element={<ProtectedRoute><AIAssistantPage /></ProtectedRoute>} />
           <Route path="/ai-visualizer" element={<ProtectedRoute><AIVisualizerPage /></ProtectedRoute>} />
