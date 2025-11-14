@@ -71,6 +71,59 @@ export type Database = {
           },
         ]
       }
+      guests: {
+        Row: {
+          attendance_status: string | null
+          created_at: string
+          dietary_restrictions: string | null
+          email: string | null
+          full_name: string
+          id: string
+          notes: string | null
+          phone: string | null
+          plus_one_allowed: boolean | null
+          plus_one_name: string | null
+          updated_at: string
+          wedding_plan_id: string
+        }
+        Insert: {
+          attendance_status?: string | null
+          created_at?: string
+          dietary_restrictions?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          plus_one_allowed?: boolean | null
+          plus_one_name?: string | null
+          updated_at?: string
+          wedding_plan_id: string
+        }
+        Update: {
+          attendance_status?: string | null
+          created_at?: string
+          dietary_restrictions?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          plus_one_allowed?: boolean | null
+          plus_one_name?: string | null
+          updated_at?: string
+          wedding_plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guests_wedding_plan_id_fkey"
+            columns: ["wedding_plan_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
