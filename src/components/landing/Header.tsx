@@ -11,11 +11,18 @@ export const Header = () => {
   const { t } = useTranslation();
 
   const navigation = [
-    { name: t('nav.home'), href: "#features" },
-    { name: t('marketplace.title'), href: "#marketplace" },
-    { name: "Цены", href: "#pricing" },
-    { name: "О нас", href: "#about" },
+    { name: t('nav.home'), href: "features" },
+    { name: t('marketplace.title'), href: "marketplace-section" },
+    { name: "Цены", href: "pricing" },
+    { name: "О нас", href: "about" },
   ];
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -30,13 +37,13 @@ export const Header = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             {navigation.map((item) => (
-              <a
+              <button
                 key={item.name}
-                href={item.href}
+                onClick={() => scrollToSection(item.href)}
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 {item.name}
-              </a>
+              </button>
             ))}
           </div>
 
@@ -73,14 +80,16 @@ export const Header = () => {
           <div className="md:hidden py-4 border-t border-border/50">
             <div className="flex flex-col gap-4">
               {navigation.map((item) => (
-                <a
+                <button
                   key={item.name}
-                  href={item.href}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={() => {
+                    scrollToSection(item.href);
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors text-left"
                 >
                   {item.name}
-                </a>
+                </button>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border/50">
                 <LanguageSwitcher />
