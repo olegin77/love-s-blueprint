@@ -14,7 +14,237 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          booking_date: string
+          couple_user_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          price: number
+          status: Database["public"]["Enums"]["booking_status"]
+          updated_at: string
+          vendor_id: string
+          wedding_plan_id: string
+        }
+        Insert: {
+          booking_date: string
+          couple_user_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          price: number
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+          vendor_id: string
+          wedding_plan_id: string
+        }
+        Update: {
+          booking_date?: string
+          couple_user_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          price?: number
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+          vendor_id?: string
+          wedding_plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_wedding_plan_id_fkey"
+            columns: ["wedding_plan_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          booking_id: string | null
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          updated_at: string
+          user_id: string
+          vendor_id: string
+        }
+        Insert: {
+          booking_id?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          updated_at?: string
+          user_id: string
+          vendor_id: string
+        }
+        Update: {
+          booking_id?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_profiles: {
+        Row: {
+          business_name: string
+          category: Database["public"]["Enums"]["vendor_category"]
+          created_at: string
+          description: string | null
+          id: string
+          location: string | null
+          portfolio_images: string[] | null
+          price_range_max: number | null
+          price_range_min: number | null
+          rating: number | null
+          total_reviews: number | null
+          updated_at: string
+          user_id: string
+          verified: boolean | null
+        }
+        Insert: {
+          business_name: string
+          category: Database["public"]["Enums"]["vendor_category"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          portfolio_images?: string[] | null
+          price_range_max?: number | null
+          price_range_min?: number | null
+          rating?: number | null
+          total_reviews?: number | null
+          updated_at?: string
+          user_id: string
+          verified?: boolean | null
+        }
+        Update: {
+          business_name?: string
+          category?: Database["public"]["Enums"]["vendor_category"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          portfolio_images?: string[] | null
+          price_range_max?: number | null
+          price_range_min?: number | null
+          rating?: number | null
+          total_reviews?: number | null
+          updated_at?: string
+          user_id?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
+      wedding_plans: {
+        Row: {
+          budget_spent: number | null
+          budget_total: number | null
+          couple_user_id: string
+          created_at: string
+          estimated_guests: number | null
+          id: string
+          notes: string | null
+          theme: string | null
+          updated_at: string
+          venue_location: string | null
+          wedding_date: string | null
+        }
+        Insert: {
+          budget_spent?: number | null
+          budget_total?: number | null
+          couple_user_id: string
+          created_at?: string
+          estimated_guests?: number | null
+          id?: string
+          notes?: string | null
+          theme?: string | null
+          updated_at?: string
+          venue_location?: string | null
+          wedding_date?: string | null
+        }
+        Update: {
+          budget_spent?: number | null
+          budget_total?: number | null
+          couple_user_id?: string
+          created_at?: string
+          estimated_guests?: number | null
+          id?: string
+          notes?: string | null
+          theme?: string | null
+          updated_at?: string
+          venue_location?: string | null
+          wedding_date?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +253,21 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      booking_status: "pending" | "confirmed" | "cancelled" | "completed"
+      payment_status: "pending" | "paid" | "refunded" | "failed"
+      user_role: "couple" | "vendor" | "admin"
+      vendor_category:
+        | "venue"
+        | "photographer"
+        | "videographer"
+        | "caterer"
+        | "florist"
+        | "decorator"
+        | "music"
+        | "makeup"
+        | "clothing"
+        | "transport"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +394,23 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      booking_status: ["pending", "confirmed", "cancelled", "completed"],
+      payment_status: ["pending", "paid", "refunded", "failed"],
+      user_role: ["couple", "vendor", "admin"],
+      vendor_category: [
+        "venue",
+        "photographer",
+        "videographer",
+        "caterer",
+        "florist",
+        "decorator",
+        "music",
+        "makeup",
+        "clothing",
+        "transport",
+        "other",
+      ],
+    },
   },
 } as const
