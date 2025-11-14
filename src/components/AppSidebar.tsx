@@ -5,10 +5,13 @@ import {
   User, 
   Settings,
   Heart,
-  LogOut
+  LogOut,
+  Briefcase
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
   SidebarContent,
@@ -23,13 +26,19 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-const menuItems = [
+const coupleMenuItems = [
   { title: "Главная", url: "/dashboard", icon: Home },
   { title: "Маркетплейс", url: "/marketplace", icon: ShoppingBag },
   { title: "Мой план", url: "/planner", icon: Calendar },
+  { title: "Профиль", url: "/profile", icon: User },
+  { title: "Настройки", url: "/settings", icon: Settings },
+];
+
+const vendorMenuItems = [
+  { title: "Главная", url: "/dashboard", icon: Home },
+  { title: "Мои услуги", url: "/vendor-dashboard", icon: Briefcase },
   { title: "Профиль", url: "/profile", icon: User },
   { title: "Настройки", url: "/settings", icon: Settings },
 ];
@@ -40,6 +49,27 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const collapsed = state === "collapsed";
+  const [userRole, setUserRole] = useState<string>("couple");
+
+  useEffect(() => {
+    fetchUserRole();
+  }, []);
+
+  const fetchUserRole = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      if (data) {
+        setUserRole(data.role);
+      }
+    }
+  };
+
+  const menuItems = userRole === "vendor" ? vendorMenuItems : coupleMenuItems;
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
