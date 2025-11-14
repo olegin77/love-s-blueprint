@@ -10,11 +10,60 @@
 ## [Unreleased]
 
 ### Planned
-- Lovable Cloud integration
-- Authentication system
-- Vendor marketplace page
-- Wedding planner dashboard
-- AI integration services
+- User Dashboard
+- Vendor Marketplace page with search & filters
+- Wedding planner interface
+- AI integration services (Phase 4)
+- Payment integration (Phase 5)
+- Mobile app (Phase 6)
+
+---
+
+## [0.2.0] - 2025-11-14
+
+### Added
+- **Backend Infrastructure (Lovable Cloud)**
+  - Connected Lovable Cloud (PostgreSQL + Supabase Auth + Storage)
+  - Created complete database schema:
+    - `profiles` table for user data
+    - `vendor_profiles` table for wedding service providers
+    - `wedding_plans` table for couple's planning
+    - `bookings` table for vendor reservations
+    - `reviews` table for vendor ratings
+  - Configured Row-Level Security (RLS) policies on all tables
+  - Created database triggers for automation:
+    - Auto-create profile on user signup
+    - Auto-update vendor ratings on new review
+    - Auto-update timestamps
+  - Added database indexes for performance optimization
+  
+- **Authentication System**
+  - Created `/auth` page with login and signup forms
+  - Implemented email/password authentication
+  - Added role selection (couple/vendor) during signup
+  - Automatic profile creation on registration
+  - Email auto-confirm enabled for faster testing
+  - Error handling and validation
+  - Toast notifications for user feedback
+  
+- **Navigation & CTA Updates**
+  - All CTA buttons now redirect to `/auth`
+  - Header buttons link to authentication page
+  - Mobile menu buttons updated
+  - Hero section CTAs connected
+
+### Changed
+- Configured Supabase Auth to auto-confirm emails (development mode)
+- Updated App.tsx to include auth route
+- Enhanced error messages for authentication flows
+
+### Security
+- ✅ RLS policies implemented on all tables
+- ✅ Couples can only access their own wedding plans
+- ✅ Vendors can only modify their own profiles
+- ✅ Bookings visible only to couple and vendor
+- ✅ Reviews require completed bookings
+- ✅ Automatic profile creation is secure (SECURITY DEFINER)
 
 ---
 

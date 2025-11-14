@@ -50,6 +50,7 @@ export const Hero = () => {
             <Button
               size="lg"
               className="text-lg h-14 px-8 shadow-elegant hover:shadow-xl transition-all"
+              onClick={() => window.location.href = '/auth'}
             >
               Начать планирование
               <ArrowRight className="ml-2 w-5 h-5" />
@@ -59,6 +60,7 @@ export const Hero = () => {
               size="lg"
               variant="outline"
               className="text-lg h-14 px-8 border-2 hover:bg-accent"
+              onClick={() => window.location.href = '#features'}
             >
               Посмотреть примеры
             </Button>
