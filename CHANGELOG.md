@@ -10,13 +10,68 @@
 ## [Unreleased]
 
 ### Planned
-- Vendor detail pages
-- Wedding plan creation form
-- Guest list management
-- Booking request system
 - AI integration services (Phase 4)
 - Payment integration (Phase 5)
 - Mobile app (Phase 6)
+
+---
+
+## [0.4.0] - 2025-11-14
+
+### Added
+- **Vendor Dashboard System**
+  - Created `/vendor-dashboard` page with full control panel
+  - Stats overview (total bookings, pending, revenue, rating)
+  - Tabbed interface (Bookings & Portfolio)
+  
+- **BookingManagement Component**
+  - Accept/decline booking functionality
+  - Status management (pending/confirmed/cancelled/completed)
+  - View detailed booking information:
+    - Couple contact details (name, email, phone)
+    - Wedding plan info (date, theme, venue)
+    - Booking date and price
+    - Notes from couple
+  - Stats dashboard with metrics:
+    - Total bookings
+    - Pending (requiring action)
+    - Confirmed bookings
+    - Completed bookings
+  - Tabs for filtering (pending/confirmed/all)
+  - One-click accept/decline actions
+  
+- **PortfolioManagement Component**
+  - Edit vendor profile information
+  - Update business name and category
+  - Manage description text
+  - Set location
+  - Configure price range (min/max)
+  - Save changes functionality
+  - Portfolio image upload placeholder (future implementation)
+  
+- **Role-Based Navigation**
+  - Dynamic sidebar menu based on user role
+  - Couple menu: Dashboard, Marketplace, Planner, Profile, Settings
+  - Vendor menu: Dashboard, Vendor Services, Profile, Settings
+  - Auto-detect role from profiles table
+  - Smooth role-based UI updates
+
+### Changed
+- Updated AppSidebar with role detection
+- Enhanced Dashboard to show vendor-specific content
+- Added vendor menu items (Briefcase icon)
+- Updated routing configuration with vendor dashboard
+- Improved booking workflow with status transitions
+
+### Fixed
+- Fixed TypeScript type issues in booking status
+- Fixed vendor category typing for profile updates
+- Improved error handling in vendor components
+
+### Security
+- ✅ Vendor dashboard protected by authentication
+- ✅ Bookings filtered by vendor ownership
+- ✅ RLS policies enforce vendor-specific data access
 
 ---
 
