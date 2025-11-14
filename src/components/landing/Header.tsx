@@ -37,8 +37,12 @@ export const Header = () => {
 
           {/* Actions */}
           <div className="hidden md:flex items-center gap-4">
-            <Button variant="ghost">Войти</Button>
-            <Button>Начать бесплатно</Button>
+            <Button variant="ghost" onClick={() => window.location.href = '/auth'}>
+              Войти
+            </Button>
+            <Button onClick={() => window.location.href = '/auth'}>
+              Начать бесплатно
+            </Button>
           </div>
 
           {/* Mobile menu button */}
@@ -69,10 +73,19 @@ export const Header = () => {
                 </a>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border/50">
-                <Button variant="ghost" className="w-full">
+                <Button 
+                  variant="ghost" 
+                  className="w-full"
+                  onClick={() => window.location.href = '/auth'}
+                >
                   Войти
                 </Button>
-                <Button className="w-full">Начать бесплатно</Button>
+                <Button 
+                  className="w-full"
+                  onClick={() => window.location.href = '/auth'}
+                >
+                  Начать бесплатно
+                </Button>
               </div>
             </div>
           </div>
