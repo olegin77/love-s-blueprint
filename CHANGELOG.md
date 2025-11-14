@@ -10,12 +10,74 @@
 ## [Unreleased]
 
 ### Planned
-- User Dashboard
-- Vendor Marketplace page with search & filters
-- Wedding planner interface
+- Vendor detail pages
+- Wedding plan creation form
+- Guest list management
+- Booking request system
 - AI integration services (Phase 4)
 - Payment integration (Phase 5)
 - Mobile app (Phase 6)
+
+---
+
+## [0.3.0] - 2025-11-14
+
+### Added
+- **Core Pages Structure**
+  - Created DashboardLayout with AppSidebar
+  - Implemented collapsible sidebar navigation
+  - Added ProtectedRoute wrapper for authentication
+  
+- **Dashboard Page (/dashboard)**
+  - Welcome section with user greeting
+  - Stats cards for key metrics
+  - Quick action buttons
+  - Daily tips card
+  - Role-based content (couple vs vendor)
+  
+- **Marketplace Page (/marketplace)**
+  - Search functionality
+  - Category filtering (11 categories)
+  - Vendor cards grid with:
+    - Portfolio images
+    - Rating and reviews count
+    - Location, price range
+    - Verified badges
+  - Empty state handling
+  - Responsive design
+  
+- **Planner Page (/planner)**
+  - Overall progress tracker
+  - Stats overview (date, budget, guests, tasks)
+  - Interactive checklist with categories
+  - Timeline placeholder
+  - Progress bar visualization
+  
+- **Profile Page (/profile)**
+  - Avatar with upload placeholder
+  - Editable profile fields (name, phone)
+  - Account type display
+  - Email (read-only)
+  - Save/Cancel functionality
+  
+- **Settings Page (/settings)**
+  - Notifications preferences
+  - Privacy & security settings
+  - Language and region options
+  - Billing information
+  - Danger zone (account deletion)
+
+### Changed
+- Updated App.tsx with 5 new protected routes
+- Enhanced sidebar with logout functionality
+- Added role badges throughout UI
+- Improved navigation flow
+
+### Security
+- ✅ All dashboard pages now protected
+- ✅ Auto-redirect to /auth if not logged in
+- ✅ Session management with Supabase
+- ✅ Protected route wrapper implemented
 
 ---
 
@@ -120,36 +182,49 @@
 
 | Version | Date | Type | Description |
 |---------|------|------|-------------|
+| 0.3.0 | 2025-11-14 | Feature | Core Pages (Dashboard, Marketplace, Planner, Profile, Settings) |
+| 0.2.0 | 2025-11-14 | Feature | Backend & Authentication |
 | 0.1.0 | 2025-11-14 | Initial | Foundation & Landing Page |
 
 ---
 
 ## Development Phases
 
-### ✅ Phase 0: Foundation (Current)
+### ✅ Phase 0: Foundation (Complete - 100%)
 - [x] Project setup
 - [x] Design system
 - [x] Landing page
-- [ ] Testing & optimization
+- [x] Backend infrastructure
+- [x] Authentication system
 
-### ⏸️ Phase 1: Core Backend
-- [ ] Lovable Cloud setup
-- [ ] Database schema
-- [ ] Authentication
-- [ ] API structure
+### ✅ Phase 1: Core Pages (Complete - 100%)
+- [x] Dashboard
+- [x] Marketplace
+- [x] Planner
+- [x] Profile
+- [x] Settings
+- [x] Protected routes
+- [x] Navigation system
 
-### ⏸️ Phase 2: Core Features
-- [ ] Vendor marketplace
-- [ ] Wedding planner
-- [ ] User dashboard
-- [ ] Search & filters
+### ⏸️ Phase 2: Data & Detail Pages (Next - 0%)
+- [ ] Sample vendors data
+- [ ] Vendor detail page
+- [ ] Wedding plan creation
+- [ ] Booking system
+- [ ] Reviews system
 
-### ⏸️ Phase 3: AI Features
+### ⏸️ Phase 3: Advanced Features
+- [ ] Guest list management
+- [ ] Budget calculator
+- [ ] Timeline builder
+- [ ] Notifications
+
+### ⏸️ Phase 4: AI Features
 - [ ] AI Wedding Visualizer
 - [ ] AI Invitation Creator
 - [ ] Virtual Try-On
 
-### ⏸️ Phase 4: FinTech
+### ⏸️ Phase 5: FinTech
 - [ ] Payment integration
 - [ ] Escrow system
 - [ ] Gift registry
