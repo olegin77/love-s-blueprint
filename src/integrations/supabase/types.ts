@@ -819,6 +819,9 @@ export type Database = {
           estimated_guests: number | null
           id: string
           notes: string | null
+          priorities: Json | null
+          style_preferences: string[] | null
+          style_reference_images: string[] | null
           theme: string | null
           updated_at: string
           venue_location: string | null
@@ -832,6 +835,9 @@ export type Database = {
           estimated_guests?: number | null
           id?: string
           notes?: string | null
+          priorities?: Json | null
+          style_preferences?: string[] | null
+          style_reference_images?: string[] | null
           theme?: string | null
           updated_at?: string
           venue_location?: string | null
@@ -845,6 +851,9 @@ export type Database = {
           estimated_guests?: number | null
           id?: string
           notes?: string | null
+          priorities?: Json | null
+          style_preferences?: string[] | null
+          style_reference_images?: string[] | null
           theme?: string | null
           updated_at?: string
           venue_location?: string | null
