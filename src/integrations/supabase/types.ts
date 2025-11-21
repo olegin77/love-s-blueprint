@@ -601,56 +601,164 @@ export type Database = {
         }
         Relationships: []
       }
+      vendor_availability: {
+        Row: {
+          booking_id: string | null
+          created_at: string | null
+          date: string
+          id: string
+          is_available: boolean | null
+          updated_at: string | null
+          vendor_id: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string | null
+          date: string
+          id?: string
+          is_available?: boolean | null
+          updated_at?: string | null
+          vendor_id: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          is_available?: boolean | null
+          updated_at?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_availability_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_availability_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendor_profiles: {
         Row: {
+          attributes: Json | null
           business_name: string
           category: Database["public"]["Enums"]["vendor_category"]
           created_at: string
           description: string | null
           id: string
+          languages: string[] | null
           location: string | null
           portfolio_images: string[] | null
           price_range_max: number | null
           price_range_min: number | null
           rating: number | null
+          service_area: string[] | null
+          starting_price: number | null
+          styles: string[] | null
           total_reviews: number | null
           updated_at: string
           user_id: string
           verified: boolean | null
         }
         Insert: {
+          attributes?: Json | null
           business_name: string
           category: Database["public"]["Enums"]["vendor_category"]
           created_at?: string
           description?: string | null
           id?: string
+          languages?: string[] | null
           location?: string | null
           portfolio_images?: string[] | null
           price_range_max?: number | null
           price_range_min?: number | null
           rating?: number | null
+          service_area?: string[] | null
+          starting_price?: number | null
+          styles?: string[] | null
           total_reviews?: number | null
           updated_at?: string
           user_id: string
           verified?: boolean | null
         }
         Update: {
+          attributes?: Json | null
           business_name?: string
           category?: Database["public"]["Enums"]["vendor_category"]
           created_at?: string
           description?: string | null
           id?: string
+          languages?: string[] | null
           location?: string | null
           portfolio_images?: string[] | null
           price_range_max?: number | null
           price_range_min?: number | null
           rating?: number | null
+          service_area?: string[] | null
+          starting_price?: number | null
+          styles?: string[] | null
           total_reviews?: number | null
           updated_at?: string
           user_id?: string
           verified?: boolean | null
         }
         Relationships: []
+      }
+      vendor_recommendations: {
+        Row: {
+          category: Database["public"]["Enums"]["vendor_category"]
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          match_reasons: Json | null
+          match_score: number
+          vendor_id: string
+          wedding_plan_id: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["vendor_category"]
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          match_reasons?: Json | null
+          match_score: number
+          vendor_id: string
+          wedding_plan_id: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["vendor_category"]
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          match_reasons?: Json | null
+          match_score?: number
+          vendor_id?: string
+          wedding_plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_recommendations_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_recommendations_wedding_plan_id_fkey"
+            columns: ["wedding_plan_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wedding_invitations: {
         Row: {
