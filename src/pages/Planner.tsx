@@ -12,6 +12,8 @@ import ExportPDFButton from "@/components/ExportPDFButton";
 import { InvitationManager } from "@/components/InvitationManager";
 import { WeddingWebsiteBuilder } from "@/components/WeddingWebsiteBuilder";
 import { BudgetTracker } from "@/components/budget/BudgetTracker";
+import { SmartVendorRecommendations } from "@/components/SmartVendorRecommendations";
+import type { WeddingMatchParams } from "@/lib/matching-engine";
 
 const Planner = () => {
   const [activeTab, setActiveTab] = useState("checklist");
@@ -103,8 +105,9 @@ const Planner = () => {
         </Card>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="checklist">Чек-лист</TabsTrigger>
+            <TabsTrigger value="recommendations">Рекомендации</TabsTrigger>
             <TabsTrigger value="budget">Бюджет</TabsTrigger>
             <TabsTrigger value="guests">Гости</TabsTrigger>
             <TabsTrigger value="invitations">Приглашения</TabsTrigger>
@@ -124,6 +127,62 @@ const Planner = () => {
                     <Badge variant="outline">{item.category}</Badge>
                   </div>
                 ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="recommendations" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>🎯 Умный подбор команды</CardTitle>
+                <CardDescription>
+                  Система автоматически подберет лучших специалистов под ваш стиль и бюджет
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Фотограф */}
+                <SmartVendorRecommendations
+                  weddingPlanId={weddingPlan.id}
+                  category="photographer"
+                  categoryBudget={weddingPlan.budget_total ? weddingPlan.budget_total * 0.15 : undefined}
+                  weddingParams={{
+                    weddingDate: weddingPlan.wedding_date ? new Date(weddingPlan.wedding_date) : undefined,
+                    budget: weddingPlan.budget_total || 0,
+                    guestCount: weddingPlan.estimated_guests || 100,
+                    style: weddingPlan.theme || 'modern',
+                    location: weddingPlan.venue_location,
+                    languages: ['russian', 'uzbek'],
+                  } as WeddingMatchParams}
+                />
+
+                {/* Музыканты */}
+                <SmartVendorRecommendations
+                  weddingPlanId={weddingPlan.id}
+                  category="music"
+                  categoryBudget={weddingPlan.budget_total ? weddingPlan.budget_total * 0.12 : undefined}
+                  weddingParams={{
+                    weddingDate: weddingPlan.wedding_date ? new Date(weddingPlan.wedding_date) : undefined,
+                    budget: weddingPlan.budget_total || 0,
+                    guestCount: weddingPlan.estimated_guests || 100,
+                    style: weddingPlan.theme || 'modern',
+                    location: weddingPlan.venue_location,
+                    languages: ['russian', 'uzbek'],
+                  } as WeddingMatchParams}
+                />
+
+                {/* Декоратор */}
+                <SmartVendorRecommendations
+                  weddingPlanId={weddingPlan.id}
+                  category="decorator"
+                  categoryBudget={weddingPlan.budget_total ? weddingPlan.budget_total * 0.10 : undefined}
+                  weddingParams={{
+                    weddingDate: weddingPlan.wedding_date ? new Date(weddingPlan.wedding_date) : undefined,
+                    budget: weddingPlan.budget_total || 0,
+                    guestCount: weddingPlan.estimated_guests || 100,
+                    style: weddingPlan.theme || 'modern',
+                    location: weddingPlan.venue_location,
+                  } as WeddingMatchParams}
+                />
               </CardContent>
             </Card>
           </TabsContent>
