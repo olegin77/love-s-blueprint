@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, TrendingUp, TrendingDown } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { SmartVendorDrawer } from "./SmartVendorDrawer";
 
 interface BudgetItem {
   id: string;
@@ -45,8 +46,15 @@ export function BudgetCategoryCard({ category, label, data, onEdit, onDelete }: 
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">{label}</CardTitle>
-          <div className="text-sm text-muted-foreground">
-            {data.items.length} {data.items.length === 1 ? "статья" : "статей"}
+
+          // ... existing imports
+
+          // ... inside component
+          <div className="flex items-center gap-2">
+            <SmartVendorDrawer category={category} maxPrice={data.planned} />
+            <div className="text-sm text-muted-foreground">
+              {data.items.length} {data.items.length === 1 ? "статья" : "статей"}
+            </div>
           </div>
         </div>
       </CardHeader>
