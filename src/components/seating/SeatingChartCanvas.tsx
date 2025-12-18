@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { Canvas as FabricCanvas, Circle, Rect, Group, Text } from "fabric";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { Canvas as FabricCanvas, Circle, Rect, Group, Text, FabricObject } from "fabric";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -37,50 +37,20 @@ export function SeatingChartCanvas({
   venueHeight = 800
 }: SeatingChartCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
+  const fabricCanvasRef = useRef<FabricCanvas | null>(null);
   const [selectedShape, setSelectedShape] = useState<"round" | "rectangle" | "square">("round");
   const [tableCapacity, setTableCapacity] = useState(8);
+  const isUpdatingRef = useRef(false);
+  const tablesRef = useRef<SeatingTable[]>(tables);
   const { toast } = useToast();
 
+  // Keep tablesRef in sync
   useEffect(() => {
-    if (!canvasRef.current) return;
+    tablesRef.current = tables;
+  }, [tables]);
 
-    const canvas = new FabricCanvas(canvasRef.current, {
-      width: venueWidth,
-      height: venueHeight,
-      backgroundColor: "#f8f9fa",
-      selection: true,
-    });
-
-    setFabricCanvas(canvas);
-
-    // Handle object modification
-    canvas.on("object:modified", () => {
-      updateTablesFromCanvas(canvas);
-    });
-
-    return () => {
-      canvas.dispose();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!fabricCanvas) return;
-    
-    // Clear canvas and redraw all tables
-    fabricCanvas.clear();
-    fabricCanvas.backgroundColor = "#f8f9fa";
-    
-    tables.forEach(table => {
-      const fabricTable = createFabricTable(table);
-      fabricCanvas.add(fabricTable);
-    });
-    
-    fabricCanvas.renderAll();
-  }, [tables, fabricCanvas]);
-
-  const createFabricTable = (table: SeatingTable) => {
-    let shape;
+  const createFabricTable = useCallback((table: SeatingTable): Group => {
+    let shape: FabricObject;
     const color = table.color || "#f43f5e";
     
     if (table.shape === "round") {
@@ -90,6 +60,8 @@ export function SeatingChartCanvas({
         opacity: 0.7,
         stroke: "#000",
         strokeWidth: 2,
+        originX: "center",
+        originY: "center",
       });
     } else if (table.shape === "rectangle") {
       shape = new Rect({
@@ -99,8 +71,10 @@ export function SeatingChartCanvas({
         opacity: 0.7,
         stroke: "#000",
         strokeWidth: 2,
+        originX: "center",
+        originY: "center",
       });
-    } else { // square
+    } else {
       shape = new Rect({
         width: table.width,
         height: table.width,
@@ -108,6 +82,8 @@ export function SeatingChartCanvas({
         opacity: 0.7,
         stroke: "#000",
         strokeWidth: 2,
+        originX: "center",
+        originY: "center",
       });
     }
 
@@ -126,29 +102,107 @@ export function SeatingChartCanvas({
       selectable: true,
       hasControls: true,
       hasBorders: true,
+      originX: "center",
+      originY: "center",
     });
 
-    // Store table id in the group
-    group.set("tableId", table.id);
-
+    (group as any).tableId = table.id;
     return group;
-  };
+  }, []);
 
-  const updateTablesFromCanvas = (canvas: FabricCanvas) => {
-    const updatedTables = tables.map(table => {
-      const fabricObj = canvas.getObjects().find((obj: any) => obj.tableId === table.id);
-      if (fabricObj) {
-        return {
-          ...table,
-          x: fabricObj.left || table.x,
-          y: fabricObj.top || table.y,
-          rotation: fabricObj.angle || table.rotation,
-        };
-      }
-      return table;
+  // Initialize canvas once
+  useEffect(() => {
+    if (!canvasRef.current || fabricCanvasRef.current) return;
+
+    const canvas = new FabricCanvas(canvasRef.current, {
+      width: venueWidth,
+      height: venueHeight,
+      backgroundColor: "#f8f9fa",
+      selection: true,
     });
-    onTablesUpdate(updatedTables);
-  };
+
+    fabricCanvasRef.current = canvas;
+
+    // Handle object modification - update state after drag/resize ends
+    canvas.on("object:modified", (e) => {
+      if (isUpdatingRef.current) return;
+      
+      const obj = e.target;
+      if (!obj) return;
+      
+      const tableId = (obj as any).tableId;
+      if (!tableId) return;
+
+      isUpdatingRef.current = true;
+      
+      const updatedTables = tablesRef.current.map(table => {
+        if (table.id === tableId) {
+          return {
+            ...table,
+            x: obj.left ?? table.x,
+            y: obj.top ?? table.y,
+            rotation: obj.angle ?? table.rotation,
+          };
+        }
+        return table;
+      });
+      
+      onTablesUpdate(updatedTables);
+      
+      setTimeout(() => {
+        isUpdatingRef.current = false;
+      }, 100);
+    });
+
+    return () => {
+      canvas.dispose();
+      fabricCanvasRef.current = null;
+    };
+  }, [venueWidth, venueHeight, onTablesUpdate]);
+
+  // Sync tables to canvas when tables change (but not during drag)
+  useEffect(() => {
+    const canvas = fabricCanvasRef.current;
+    if (!canvas || isUpdatingRef.current) return;
+
+    // Get current canvas objects
+    const canvasObjects = canvas.getObjects();
+    const canvasTableIds = new Set(canvasObjects.map((obj: any) => obj.tableId).filter(Boolean));
+    const propsTableIds = new Set(tables.map(t => t.id));
+
+    // Remove tables that no longer exist in props
+    canvasObjects.forEach((obj: any) => {
+      if (obj.tableId && !propsTableIds.has(obj.tableId)) {
+        canvas.remove(obj);
+      }
+    });
+
+    // Add or update tables
+    tables.forEach(table => {
+      const existingObj = canvasObjects.find((obj: any) => obj.tableId === table.id);
+      
+      if (existingObj) {
+        // Only update position if significantly different (not during drag)
+        const xDiff = Math.abs((existingObj.left ?? 0) - table.x);
+        const yDiff = Math.abs((existingObj.top ?? 0) - table.y);
+        
+        if (xDiff > 5 || yDiff > 5) {
+          existingObj.set({
+            left: table.x,
+            top: table.y,
+            angle: table.rotation,
+          });
+          existingObj.setCoords();
+        }
+      } else {
+        // Add new table
+        const fabricTable = createFabricTable(table);
+        canvas.add(fabricTable);
+      }
+    });
+
+    canvas.renderAll();
+  }, [tables, createFabricTable]);
 
   const handleAddTable = () => {
     const newTable: SeatingTable = {
@@ -156,8 +210,8 @@ export function SeatingChartCanvas({
       tableNumber: tables.length + 1,
       shape: selectedShape,
       capacity: tableCapacity,
-      x: 100,
-      y: 100,
+      x: 150 + Math.random() * 200,
+      y: 150 + Math.random() * 200,
       width: selectedShape === "round" ? 100 : 120,
       height: selectedShape === "rectangle" ? 60 : 100,
       rotation: 0,
@@ -174,14 +228,15 @@ export function SeatingChartCanvas({
   };
 
   const handleDeleteSelected = () => {
-    if (!fabricCanvas) return;
+    const canvas = fabricCanvasRef.current;
+    if (!canvas) return;
 
-    const activeObject = fabricCanvas.getActiveObject();
+    const activeObject = canvas.getActiveObject();
     if (activeObject) {
       const tableId = (activeObject as any).tableId;
       const updatedTables = tables.filter(t => t.id !== tableId);
+      canvas.remove(activeObject);
       onTablesUpdate(updatedTables);
-      fabricCanvas.remove(activeObject);
       
       toast({
         title: "Стол удалён",
@@ -197,9 +252,10 @@ export function SeatingChartCanvas({
   };
 
   const handleExport = () => {
-    if (!fabricCanvas) return;
+    const canvas = fabricCanvasRef.current;
+    if (!canvas) return;
 
-    const dataURL = fabricCanvas.toDataURL({
+    const dataURL = canvas.toDataURL({
       format: "png",
       quality: 1,
       multiplier: 2,
