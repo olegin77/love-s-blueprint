@@ -28,7 +28,7 @@ export function SmartVendorDrawer({ category, maxPrice }: SmartVendorDrawerProps
         const { data } = await supabase
             .from('vendor_profiles')
             .select('*')
-            .eq('category', category)
+            .eq('category', category as any)
             .lte('price_range_min', maxPrice * 1.2) // Allow slightly higher
             .limit(5);
 
