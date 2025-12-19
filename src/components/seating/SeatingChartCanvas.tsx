@@ -42,6 +42,7 @@ export function SeatingChartCanvas({
   const [tableCapacity, setTableCapacity] = useState(8);
   const isUpdatingRef = useRef(false);
   const tablesRef = useRef<SeatingTable[]>(tables);
+  const [syncNonce, setSyncNonce] = useState(0);
   const { toast } = useToast();
 
   // Keep tablesRef in sync
@@ -126,16 +127,16 @@ export function SeatingChartCanvas({
     // Handle object modification - update state after drag/resize ends
     canvas.on("object:modified", (e) => {
       if (isUpdatingRef.current) return;
-      
+
       const obj = e.target;
       if (!obj) return;
-      
+
       const tableId = (obj as any).tableId;
       if (!tableId) return;
 
       isUpdatingRef.current = true;
-      
-      const updatedTables = tablesRef.current.map(table => {
+
+      const updatedTables = tablesRef.current.map((table) => {
         if (table.id === tableId) {
           return {
             ...table,
@@ -146,12 +147,17 @@ export function SeatingChartCanvas({
         }
         return table;
       });
-      
+
+      // Keep ref in sync immediately to avoid any stale reads
+      tablesRef.current = updatedTables;
       onTablesUpdate(updatedTables);
-      
+
+      // Force a follow-up sync after React state settles
       setTimeout(() => {
         isUpdatingRef.current = false;
-      }, 100);
+        setSyncNonce((n) => n + 1);
+        canvas.requestRenderAll();
+      }, 0);
     });
 
     return () => {
@@ -160,49 +166,50 @@ export function SeatingChartCanvas({
     };
   }, [venueWidth, venueHeight, onTablesUpdate]);
 
-  // Sync tables to canvas when tables change (but not during drag)
+  // Sync tables to canvas when tables change (and after drag settles)
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
-    if (!canvas || isUpdatingRef.current) return;
+    if (!canvas) return;
 
-    // Get current canvas objects
+    // IMPORTANT: don't early-return here; we still need to ensure objects exist.
     const canvasObjects = canvas.getObjects();
-    const canvasTableIds = new Set(canvasObjects.map((obj: any) => obj.tableId).filter(Boolean));
-    const propsTableIds = new Set(tables.map(t => t.id));
+    const propsTableIds = new Set(tables.map((t) => t.id));
 
-    // Remove tables that no longer exist in props
-    canvasObjects.forEach((obj: any) => {
-      if (obj.tableId && !propsTableIds.has(obj.tableId)) {
-        canvas.remove(obj);
-      }
-    });
+    // Remove tables that no longer exist in props (skip while actively updating)
+    if (!isUpdatingRef.current) {
+      canvasObjects.forEach((obj: any) => {
+        if (obj.tableId && !propsTableIds.has(obj.tableId)) {
+          canvas.remove(obj);
+        }
+      });
+    }
 
     // Add or update tables
-    tables.forEach(table => {
-      const existingObj = canvasObjects.find((obj: any) => obj.tableId === table.id);
-      
+    tables.forEach((table) => {
+      const existingObj = canvas.getObjects().find((obj: any) => obj.tableId === table.id);
+
       if (existingObj) {
-        // Only update position if significantly different (not during drag)
-        const xDiff = Math.abs((existingObj.left ?? 0) - table.x);
-        const yDiff = Math.abs((existingObj.top ?? 0) - table.y);
-        
-        if (xDiff > 5 || yDiff > 5) {
-          existingObj.set({
-            left: table.x,
-            top: table.y,
-            angle: table.rotation,
-          });
-          existingObj.setCoords();
+        if (!isUpdatingRef.current) {
+          const xDiff = Math.abs((existingObj.left ?? 0) - table.x);
+          const yDiff = Math.abs((existingObj.top ?? 0) - table.y);
+
+          if (xDiff > 1 || yDiff > 1) {
+            existingObj.set({
+              left: table.x,
+              top: table.y,
+              angle: table.rotation,
+            });
+            existingObj.setCoords();
+          }
         }
       } else {
-        // Add new table
         const fabricTable = createFabricTable(table);
         canvas.add(fabricTable);
       }
     });
 
-    canvas.renderAll();
-  }, [tables, createFabricTable]);
+    canvas.requestRenderAll();
+  }, [tables, createFabricTable, syncNonce]);
 
   const handleAddTable = () => {
     const newTable: SeatingTable = {
