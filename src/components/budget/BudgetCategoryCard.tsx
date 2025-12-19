@@ -44,12 +44,8 @@ export function BudgetCategoryCard({ category, label, data, onEdit, onDelete }: 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
           <CardTitle className="text-lg">{label}</CardTitle>
-
-          // ... existing imports
-
-          // ... inside component
           <div className="flex items-center gap-2">
             <SmartVendorDrawer category={category} maxPrice={data.planned} />
             <div className="text-sm text-muted-foreground">
