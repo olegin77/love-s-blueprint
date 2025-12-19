@@ -33,7 +33,7 @@ const Auth = () => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/");
+        navigate("/dashboard");
       }
     };
     checkUser();
@@ -107,10 +107,10 @@ const Auth = () => {
       }
 
       // Default redirect
-      navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       console.error("Error checking user data:", error);
-      navigate("/");
+      navigate("/dashboard");
     }
   };
 
