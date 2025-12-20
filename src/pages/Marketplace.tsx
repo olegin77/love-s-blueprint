@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Search, Star, MapPin, Heart, SlidersHorizontal } from "lucide-react";
+import { Search, Star, MapPin, Heart, SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
+const ITEMS_PER_PAGE = 12;
 
 const DEMO_VENDORS = [
   { id: 'demo-1', business_name: 'Royal Palace Venue', category: 'venue', location: 'Ташкент', price_range_min: 15000000, price_range_max: 60000000, rating: 4.8, total_reviews: 124, verified: true, isDemo: true },
@@ -35,6 +37,7 @@ const Marketplace = () => {
   const [loading, setLoading] = useState(true);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [locations, setLocations] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchVendors();
@@ -137,32 +140,45 @@ const Marketplace = () => {
     }
   };
 
-  const filteredVendors = vendors
-    .filter((vendor) => {
-      const matchesSearch = vendor.business_name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === "all" || vendor.category === selectedCategory;
-      const matchesLocation = selectedLocation === "all" || vendor.location === selectedLocation;
-      const matchesRating = vendor.rating >= minRating;
-      const matchesPrice = 
-        vendor.price_range_min >= priceRange[0] && 
-        vendor.price_range_max <= priceRange[1];
-      
-      return matchesSearch && matchesCategory && matchesLocation && matchesRating && matchesPrice;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case "rating":
-          return (b.rating || 0) - (a.rating || 0);
-        case "price_low":
-          return (a.price_range_min || 0) - (b.price_range_min || 0);
-        case "price_high":
-          return (b.price_range_max || 0) - (a.price_range_max || 0);
-        case "name":
-          return a.business_name.localeCompare(b.business_name);
-        default:
-          return 0;
-      }
-    });
+  const filteredVendors = useMemo(() => {
+    return vendors
+      .filter((vendor) => {
+        const matchesSearch = vendor.business_name.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = selectedCategory === "all" || vendor.category === selectedCategory;
+        const matchesLocation = selectedLocation === "all" || vendor.location === selectedLocation;
+        const matchesRating = vendor.rating >= minRating;
+        const matchesPrice = 
+          vendor.price_range_min >= priceRange[0] && 
+          vendor.price_range_max <= priceRange[1];
+        
+        return matchesSearch && matchesCategory && matchesLocation && matchesRating && matchesPrice;
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case "rating":
+            return (b.rating || 0) - (a.rating || 0);
+          case "price_low":
+            return (a.price_range_min || 0) - (b.price_range_min || 0);
+          case "price_high":
+            return (b.price_range_max || 0) - (a.price_range_max || 0);
+          case "name":
+            return a.business_name.localeCompare(b.business_name);
+          default:
+            return 0;
+        }
+      });
+  }, [vendors, searchQuery, selectedCategory, selectedLocation, minRating, priceRange, sortBy]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, selectedLocation, minRating, priceRange, sortBy]);
+
+  const totalPages = Math.ceil(filteredVendors.length / ITEMS_PER_PAGE);
+  const paginatedVendors = filteredVendors.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <DashboardLayout>
@@ -289,8 +305,14 @@ const Marketplace = () => {
             </div>
           ) : (
             <>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Показано {paginatedVendors.length} из {filteredVendors.length} поставщиков
+                </p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredVendors.map((vendor) => (
+                {paginatedVendors.map((vendor) => (
                   <Card 
                     key={vendor.id} 
                     className="hover:shadow-lg transition-shadow cursor-pointer"
@@ -355,6 +377,57 @@ const Marketplace = () => {
                   <p className="text-muted-foreground">
                     Поставщики не найдены. Попробуйте изменить фильтры.
                   </p>
+                </div>
+              )}
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 pt-6">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                      // Show first, last, current and adjacent pages
+                      if (
+                        page === 1 ||
+                        page === totalPages ||
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      ) {
+                        return (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            className="w-8 h-8 p-0"
+                            onClick={() => setCurrentPage(page)}
+                          >
+                            {page}
+                          </Button>
+                        );
+                      }
+                      // Show ellipsis
+                      if (page === currentPage - 2 || page === currentPage + 2) {
+                        return <span key={page} className="px-2">...</span>;
+                      }
+                      return null;
+                    })}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
                 </div>
               )}
             </>
