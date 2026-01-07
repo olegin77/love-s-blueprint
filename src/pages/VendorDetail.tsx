@@ -67,7 +67,7 @@ const VendorDetail = () => {
         .from("vendor_profiles")
         .select("*")
         .eq("id", vendorId)
-        .single();
+        .maybeSingle();
 
       if (vendorError) throw vendorError;
 

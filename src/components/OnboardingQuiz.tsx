@@ -20,49 +20,49 @@ const weddingStyles = [
   {
     id: "classic",
     name: "Классический",
-    image: "https://images.unsplash.com/photo-1519741497674-611481863552?w=400&h=300&fit=crop",
+    image: "https://images.pexels.com/photos/1730877/pexels-photo-1730877.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop",
     description: "Элегантность и традиции"
   },
   {
     id: "modern",
     name: "Современный",
-    image: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=400&h=300&fit=crop",
+    image: "https://images.pexels.com/photos/1024993/pexels-photo-1024993.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop",
     description: "Минимализм и стиль"
   },
   {
     id: "rustic",
     name: "Рустик",
-    image: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=400&h=300&fit=crop",
+    image: "https://images.pexels.com/photos/2291462/pexels-photo-2291462.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop",
     description: "Природа и уют"
   },
   {
     id: "bohemian",
     name: "Бохо",
-    image: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=400&h=300&fit=crop",
+    image: "https://images.pexels.com/photos/1128783/pexels-photo-1128783.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop",
     description: "Свобода и творчество"
   },
   {
     id: "glamorous",
     name: "Гламурный",
-    image: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=400&h=300&fit=crop",
+    image: "https://images.pexels.com/photos/1616113/pexels-photo-1616113.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop",
     description: "Роскошь и блеск"
   },
   {
     id: "garden",
     name: "Садовая",
-    image: "https://images.unsplash.com/photo-1469371670807-013ccf25f16a?w=400&h=300&fit=crop",
+    image: "https://images.pexels.com/photos/169198/pexels-photo-169198.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop",
     description: "На природе, цветы"
   },
   {
     id: "minimalist",
     name: "Минимализм",
-    image: "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=400&h=300&fit=crop",
+    image: "https://images.pexels.com/photos/1024960/pexels-photo-1024960.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop",
     description: "Простота и изящество"
   },
   {
     id: "romantic",
     name: "Романтичный",
-    image: "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=400&h=300&fit=crop",
+    image: "https://images.pexels.com/photos/931177/pexels-photo-931177.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop",
     description: "Нежность и любовь"
   }
 ];

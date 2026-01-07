@@ -26,7 +26,7 @@ export const useCheckWeddingPlan = (shouldRedirect = false) => {
           .from("profiles")
           .select("role")
           .eq("id", user.id)
-          .single();
+          .maybeSingle();
 
         // Only check wedding plan for couples
         if (profile?.role !== "couple") {

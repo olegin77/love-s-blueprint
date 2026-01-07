@@ -41,7 +41,7 @@ const Planner = () => {
         .from("wedding_plans")
         .select("*")
         .eq("couple_user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (!error && data) {
         setWeddingPlan(data);

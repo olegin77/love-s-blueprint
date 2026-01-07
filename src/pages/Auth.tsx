@@ -83,7 +83,7 @@ const Auth = () => {
         .from("profiles")
         .select("role")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
 
       // Vendors go to dashboard
       if (profile?.role === "vendor") {
