@@ -32,14 +32,14 @@ const Dashboard = () => {
         .from("profiles")
         .select("*")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
       setProfile(profileData);
 
       const { data: weddingPlan } = await supabase
         .from("wedding_plans")
         .select("*")
         .eq("couple_user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (weddingPlan) {
         setHasWeddingPlan(true);

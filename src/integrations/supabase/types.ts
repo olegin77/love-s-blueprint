@@ -1086,7 +1086,30 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_vendor_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_wedding_budget_totals: {
