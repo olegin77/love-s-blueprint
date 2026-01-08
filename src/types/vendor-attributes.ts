@@ -221,9 +221,31 @@ export type VendorAttributesMap = {
  * Причины совпадения для мэтчинга
  */
 export interface MatchReason {
-  type: 'style' | 'budget' | 'availability' | 'language' | 'feature' | 'location' | 'rating';
+  type: 'style' | 'budget' | 'availability' | 'language' | 'feature' | 'location' | 'rating' | 'capacity' | 'cuisine' | 'dietary' | 'music' | 'parking' | 'outdoor' | 'experience' | 'verification';
   score: number; // Вклад в общий score (0-100)
   description: string; // Человекочитаемое объяснение
+  isPositive?: boolean; // Позитивный или негативный фактор
+}
+
+/**
+ * Типы жёстких фильтров (причины исключения)
+ */
+export type HardFilterType =
+  | 'capacity_exceeded' // Вместимость меньше чем гостей
+  | 'capacity_too_large' // Минимум гостей больше чем нужно
+  | 'budget_exceeded' // Цена выше бюджета
+  | 'location_mismatch' // Не работает в нужной локации
+  | 'unavailable' // Занят на дату свадьбы
+  | 'min_guests_not_met'; // Не набирается минимум гостей
+
+/**
+ * Причина исключения поставщика
+ */
+export interface ExclusionReason {
+  filter: HardFilterType;
+  description: string;
+  vendorValue?: string | number;
+  requiredValue?: string | number;
 }
 
 /**
@@ -235,4 +257,15 @@ export interface VendorMatchResult {
   reasons: MatchReason[];
   estimatedPrice?: number;
   availableOnDate: boolean;
+  // Новые поля для hard filters
+  excluded?: boolean;
+  exclusionReason?: ExclusionReason;
+  categoryScores?: {
+    style: number;
+    rating: number;
+    budget: number;
+    experience: number;
+    categorySpecific: number;
+    verification: number;
+  };
 }

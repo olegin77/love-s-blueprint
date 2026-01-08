@@ -1,6 +1,6 @@
 /**
- * Smart Matching Engine для подбора вендоров
- * Реализует алгоритм мэтчинга на основе предпочтений пары и атрибутов поставщиков
+ * Smart Matching Engine для подбора вендоров v2.0
+ * Реализует алгоритм мэтчинга с Hard Filters и Soft Scoring
  */
 
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,8 @@ import type {
   VendorAttributes,
   VendorMatchResult,
   MatchReason,
+  ExclusionReason,
+  HardFilterType,
   PhotographerAttributes,
   MusicianAttributes,
   DecoratorAttributes,
@@ -17,6 +19,7 @@ import type {
 } from "@/types/vendor-attributes";
 
 type VendorCategory = Database['public']['Enums']['vendor_category'];
+type VendorProfile = Database['public']['Tables']['vendor_profiles']['Row'];
 
 /**
  * Полные параметры свадьбы для мэтчинга
@@ -28,6 +31,7 @@ export interface WeddingMatchParams {
   categoryBudget?: number;
   guestCount: number;
   style?: string;
+  styles?: string[];
   location?: string;
   languages?: string[];
   priorities?: Record<string, 'high' | 'medium' | 'low'>;
@@ -61,9 +65,32 @@ interface VendorFilters {
 }
 
 /**
+ * Опции для matching engine
+ */
+interface MatchingOptions {
+  includeExcluded?: boolean; // Включать исключённых с причинами
+  budgetFlexibility?: number; // Насколько можно превысить бюджет (0.2 = 20%)
+  minScore?: number; // Минимальный балл для включения
+  limit?: number; // Лимит результатов
+}
+
+const DEFAULT_OPTIONS: MatchingOptions = {
+  includeExcluded: false,
+  budgetFlexibility: 0.2,
+  minScore: 20,
+  limit: 20,
+};
+
+/**
  * Класс для работы с Matching Engine
  */
 export class VendorMatchingEngine {
+  private options: MatchingOptions;
+
+  constructor(options: Partial<MatchingOptions> = {}) {
+    this.options = { ...DEFAULT_OPTIONS, ...options };
+  }
+
   /**
    * Получить параметры свадьбы из базы данных
    */
@@ -82,15 +109,16 @@ export class VendorMatchingEngine {
       budget: Number(data.budget_total) || 0,
       guestCount: data.estimated_guests || 100,
       style: data.style_preferences?.[0] || data.theme || undefined,
+      styles: data.style_preferences || [],
       location: data.venue_location || undefined,
       priorities: (data.category_priorities as Record<string, 'high' | 'medium' | 'low'>) || {},
-      venueTypePreference: (data as any).venue_type_preference || undefined,
-      outdoorPreference: (data as any).outdoor_preference || false,
-      parkingNeeded: (data as any).parking_needed || false,
-      cuisinePreferences: (data as any).cuisine_preferences || [],
-      dietaryRequirements: (data as any).dietary_requirements || [],
-      musicPreferences: (data as any).music_preferences || [],
-      programPreferences: (data as any).program_preferences || [],
+      venueTypePreference: data.venue_type_preference || undefined,
+      outdoorPreference: data.outdoor_preference || false,
+      parkingNeeded: data.parking_needed || false,
+      cuisinePreferences: data.cuisine_preferences || [],
+      dietaryRequirements: data.dietary_requirements || [],
+      musicPreferences: data.music_preferences || [],
+      programPreferences: data.program_preferences || [],
     };
   }
 
@@ -126,39 +154,130 @@ export class VendorMatchingEngine {
   }
 
   /**
+   * === HARD FILTERS ===
+   * Проверяет, должен ли поставщик быть исключён
+   */
+  private static applyHardFilters(
+    vendor: VendorProfile,
+    params: WeddingMatchParams,
+    categoryBudget: number,
+    isAvailable: boolean
+  ): ExclusionReason | null {
+    // 1. Проверка доступности на дату
+    if (!isAvailable) {
+      return {
+        filter: 'unavailable',
+        description: 'Занят на выбранную дату свадьбы',
+      };
+    }
+
+    // 2. Проверка максимальной вместимости
+    // Например: тойхона на 500 человек НЕ подходит для 600 гостей
+    if (vendor.max_guests && vendor.max_guests < params.guestCount) {
+      return {
+        filter: 'capacity_exceeded',
+        description: `Максимум ${vendor.max_guests} гостей, вам нужно ${params.guestCount}`,
+        vendorValue: vendor.max_guests,
+        requiredValue: params.guestCount,
+      };
+    }
+
+    // Для venue проверяем capacity_max
+    if (vendor.capacity_max && vendor.capacity_max < params.guestCount) {
+      return {
+        filter: 'capacity_exceeded',
+        description: `Вместимость до ${vendor.capacity_max} человек, вам нужно ${params.guestCount}`,
+        vendorValue: vendor.capacity_max,
+        requiredValue: params.guestCount,
+      };
+    }
+
+    // 3. Проверка минимальной вместимости
+    // Например: зал от 200 человек не подходит для свадьбы на 50 гостей
+    if (vendor.min_guests && vendor.min_guests > params.guestCount) {
+      return {
+        filter: 'min_guests_not_met',
+        description: `Минимум ${vendor.min_guests} гостей, у вас ${params.guestCount}`,
+        vendorValue: vendor.min_guests,
+        requiredValue: params.guestCount,
+      };
+    }
+
+    if (vendor.capacity_min && vendor.capacity_min > params.guestCount) {
+      return {
+        filter: 'min_guests_not_met',
+        description: `Минимальная вместимость ${vendor.capacity_min}, у вас ${params.guestCount} гостей`,
+        vendorValue: vendor.capacity_min,
+        requiredValue: params.guestCount,
+      };
+    }
+
+    // 4. Проверка бюджета (с учётом гибкости)
+    if (vendor.starting_price && categoryBudget > 0) {
+      const maxAllowedPrice = categoryBudget * (1 + (DEFAULT_OPTIONS.budgetFlexibility || 0.2));
+      if (Number(vendor.starting_price) > maxAllowedPrice) {
+        return {
+          filter: 'budget_exceeded',
+          description: `Цена от ${this.formatPrice(vendor.starting_price)}, бюджет ${this.formatPrice(categoryBudget)}`,
+          vendorValue: Number(vendor.starting_price),
+          requiredValue: categoryBudget,
+        };
+      }
+    }
+
+    // 5. Проверка локации
+    if (params.location && vendor.service_area?.length) {
+      const locationLower = params.location.toLowerCase();
+      const servesLocation = vendor.service_area.some(
+        (area) => area.toLowerCase().includes(locationLower) || locationLower.includes(area.toLowerCase())
+      );
+      
+      if (!servesLocation && vendor.location?.toLowerCase() !== locationLower) {
+        return {
+          filter: 'location_mismatch',
+          description: `Не работает в регионе: ${params.location}`,
+          vendorValue: vendor.service_area.join(', '),
+          requiredValue: params.location,
+        };
+      }
+    }
+
+    return null; // Прошёл все фильтры
+  }
+
+  /**
+   * Форматирование цены
+   */
+  private static formatPrice(price: number | string): string {
+    const num = Number(price);
+    if (num >= 1000000) {
+      return `${(num / 1000000).toFixed(1)} млн сум`;
+    }
+    if (num >= 1000) {
+      return `${Math.round(num / 1000)} тыс сум`;
+    }
+    return `${num} сум`;
+  }
+
+  /**
    * Основной метод поиска подходящих вендоров
    */
   static async findMatches(
     params: WeddingMatchParams,
-    filters: VendorFilters
+    filters: VendorFilters,
+    options: MatchingOptions = DEFAULT_OPTIONS
   ): Promise<VendorMatchResult[]> {
     try {
       // Рассчитать бюджет для категории
       const categoryBudget = params.categoryBudget || 
         this.calculateCategoryBudget(params.budget, filters.category, params.priorities || {});
 
-      // Шаг 1: Hard Filter (жесткий отсев)
+      // Загрузка всех вендоров категории (без предварительной фильтрации)
+      // Это позволяет показать причины исключения
       let query = supabase
         .from('vendor_profiles')
         .select('*')
         .eq('category', filters.category);
-
-      // Фильтр по цене
-      if (categoryBudget > 0) {
-        query = query.lte('starting_price', categoryBudget * 1.2); // +20% запаса
-      }
-
-      // Фильтр по локации (service_area)
-      if (filters.location) {
-        query = query.or(`service_area.cs.{${filters.location}},location.eq.${filters.location}`);
-      }
-
-      // Фильтр по вместимости для площадок и кейтеринга
-      if (filters.category === 'venue' || filters.category === 'caterer') {
-        if (filters.minCapacity) {
-          query = query.gte('capacity_max', filters.minCapacity);
-        }
-      }
 
       const { data: vendors, error } = await query;
 
@@ -171,39 +290,65 @@ export class VendorMatchingEngine {
         return [];
       }
 
-      // Шаг 2: Проверка доступности
-      let availableVendors = vendors;
-      if (filters.availableOnDate) {
-        availableVendors = await this.filterByAvailability(
-          vendors,
-          filters.availableOnDate
-        );
-      }
+      // Проверка доступности на дату
+      const availabilityMap = await this.checkAvailability(
+        vendors.map(v => v.id),
+        filters.availableOnDate
+      );
 
-      // Шаг 3: Soft Filter (расчет совместимости)
+      // Обработка каждого вендора
       const matchResults: VendorMatchResult[] = [];
 
-      for (const vendor of availableVendors) {
+      for (const vendor of vendors) {
+        const isAvailable = availabilityMap.get(vendor.id) ?? true;
+        
+        // Применяем Hard Filters
+        const exclusionReason = this.applyHardFilters(vendor, params, categoryBudget, isAvailable);
+        
+        if (exclusionReason && !options.includeExcluded) {
+          continue; // Пропускаем исключённых если не нужно их показывать
+        }
+
+        // Рассчитываем Soft Score
         const matchScore = await this.calculateMatchScore(vendor, params, filters, categoryBudget);
         
+        // Проверяем минимальный балл
+        if (!exclusionReason && matchScore.score < (options.minScore || 0)) {
+          continue;
+        }
+
         matchResults.push({
           vendorId: vendor.id,
-          matchScore: matchScore.score,
+          matchScore: exclusionReason ? 0 : matchScore.score,
           reasons: matchScore.reasons,
-          estimatedPrice: vendor.starting_price || undefined,
-          availableOnDate: true,
+          estimatedPrice: vendor.starting_price ? Number(vendor.starting_price) : undefined,
+          availableOnDate: isAvailable,
+          excluded: !!exclusionReason,
+          exclusionReason: exclusionReason || undefined,
+          categoryScores: matchScore.categoryScores,
         });
       }
 
-      // Сортировка по score
-      matchResults.sort((a, b) => b.matchScore - a.matchScore);
+      // Сортировка: сначала не исключённые, потом по score
+      matchResults.sort((a, b) => {
+        if (a.excluded !== b.excluded) {
+          return a.excluded ? 1 : -1;
+        }
+        return b.matchScore - a.matchScore;
+      });
 
-      // Кэширование результатов
+      // Применяем лимит
+      const limitedResults = options.limit 
+        ? matchResults.slice(0, options.limit) 
+        : matchResults;
+
+      // Кэширование результатов (только не исключённых)
       if (params.weddingPlanId) {
-        await this.cacheRecommendations(matchResults.slice(0, 10), params.weddingPlanId, filters.category);
+        const toCache = limitedResults.filter(r => !r.excluded).slice(0, 10);
+        await this.cacheRecommendations(toCache, params.weddingPlanId, filters.category);
       }
 
-      return matchResults;
+      return limitedResults;
     } catch (error) {
       console.error('Matching engine error:', error);
       return [];
@@ -242,7 +387,38 @@ export class VendorMatchingEngine {
   }
 
   /**
-   * Фильтрация по доступности на дату
+   * Проверка доступности вендоров на дату (возвращает Map)
+   */
+  private static async checkAvailability(
+    vendorIds: string[],
+    date?: Date
+  ): Promise<Map<string, boolean>> {
+    const result = new Map<string, boolean>();
+    
+    // Если дата не указана, все доступны
+    if (!date) {
+      vendorIds.forEach(id => result.set(id, true));
+      return result;
+    }
+
+    const { data: unavailable } = await supabase
+      .from('vendor_availability')
+      .select('vendor_id')
+      .in('vendor_id', vendorIds)
+      .eq('date', date.toISOString().split('T')[0])
+      .eq('is_available', false);
+
+    const unavailableSet = new Set(unavailable?.map(a => a.vendor_id) || []);
+    
+    vendorIds.forEach(id => {
+      result.set(id, !unavailableSet.has(id));
+    });
+
+    return result;
+  }
+
+  /**
+   * Фильтрация по доступности на дату (legacy)
    */
   private static async filterByAvailability(
     vendors: any[],
@@ -270,7 +446,7 @@ export class VendorMatchingEngine {
     params: WeddingMatchParams,
     filters: VendorFilters,
     categoryBudget: number
-  ): Promise<{ score: number; reasons: MatchReason[] }> {
+  ): Promise<{ score: number; reasons: MatchReason[]; categoryScores: VendorMatchResult['categoryScores'] }> {
     let totalScore = 0;
     const reasons: MatchReason[] = [];
 
@@ -365,6 +541,14 @@ export class VendorMatchingEngine {
     return {
       score: Math.min(totalScore, 100),
       reasons: reasons.slice(0, 5), // Топ-5 причин
+      categoryScores: {
+        style: params.style && vendor.styles?.includes(params.style) ? 25 : 0,
+        rating: vendor.rating ? Math.round((Number(vendor.rating) / 5) * 20) : 0,
+        budget: categoryBudget > 0 && vendor.starting_price ? (Number(vendor.starting_price) <= categoryBudget ? 20 : 10) : 0,
+        experience: vendor.experience_years ? Math.min(vendor.experience_years * 2, 15) : 0,
+        categorySpecific: categoryScore.score,
+        verification: vendor.verified ? 5 : 0,
+      },
     };
   }
 
