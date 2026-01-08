@@ -15,7 +15,7 @@ import { BudgetTracker } from "@/components/budget/BudgetTracker";
 import { SmartVendorRecommendations } from "@/components/SmartVendorRecommendations";
 import { WeddingPlanProgress } from "@/components/WeddingPlanProgress";
 import { useMilestones } from "@/hooks/useMilestones";
-import type { WeddingMatchParams } from "@/lib/matching-engine";
+
 
 const Planner = () => {
   const [activeTab, setActiveTab] = useState("checklist");
@@ -157,14 +157,6 @@ const Planner = () => {
                   weddingPlanId={weddingPlan.id}
                   category="photographer"
                   categoryBudget={weddingPlan.budget_total ? weddingPlan.budget_total * 0.15 : undefined}
-                  weddingParams={{
-                    weddingDate: weddingPlan.wedding_date ? new Date(weddingPlan.wedding_date) : undefined,
-                    budget: weddingPlan.budget_total || 0,
-                    guestCount: weddingPlan.estimated_guests || 100,
-                    style: weddingPlan.theme || 'modern',
-                    location: weddingPlan.venue_location,
-                    languages: ['russian', 'uzbek'],
-                  } as WeddingMatchParams}
                 />
 
                 {/* Музыканты */}
@@ -172,14 +164,6 @@ const Planner = () => {
                   weddingPlanId={weddingPlan.id}
                   category="music"
                   categoryBudget={weddingPlan.budget_total ? weddingPlan.budget_total * 0.12 : undefined}
-                  weddingParams={{
-                    weddingDate: weddingPlan.wedding_date ? new Date(weddingPlan.wedding_date) : undefined,
-                    budget: weddingPlan.budget_total || 0,
-                    guestCount: weddingPlan.estimated_guests || 100,
-                    style: weddingPlan.theme || 'modern',
-                    location: weddingPlan.venue_location,
-                    languages: ['russian', 'uzbek'],
-                  } as WeddingMatchParams}
                 />
 
                 {/* Декоратор */}
@@ -187,13 +171,6 @@ const Planner = () => {
                   weddingPlanId={weddingPlan.id}
                   category="decorator"
                   categoryBudget={weddingPlan.budget_total ? weddingPlan.budget_total * 0.10 : undefined}
-                  weddingParams={{
-                    weddingDate: weddingPlan.wedding_date ? new Date(weddingPlan.wedding_date) : undefined,
-                    budget: weddingPlan.budget_total || 0,
-                    guestCount: weddingPlan.estimated_guests || 100,
-                    style: weddingPlan.theme || 'modern',
-                    location: weddingPlan.venue_location,
-                  } as WeddingMatchParams}
                 />
               </CardContent>
             </Card>

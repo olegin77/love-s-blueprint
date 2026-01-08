@@ -231,12 +231,16 @@ export interface MatchReason {
  * Типы жёстких фильтров (причины исключения)
  */
 export type HardFilterType =
-  | 'capacity_exceeded' // Вместимость меньше чем гостей
-  | 'capacity_too_large' // Минимум гостей больше чем нужно
-  | 'budget_exceeded' // Цена выше бюджета
-  | 'location_mismatch' // Не работает в нужной локации
-  | 'unavailable' // Занят на дату свадьбы
-  | 'min_guests_not_met'; // Не набирается минимум гостей
+  | 'capacity_exceeded'   // Вместимость меньше чем гостей
+  | 'capacity_too_large'  // Минимум гостей больше чем нужно
+  | 'budget_exceeded'     // Цена выше бюджета
+  | 'location_mismatch'   // Не работает в нужной локации
+  | 'unavailable'         // Занят на дату свадьбы
+  | 'min_guests_not_met'  // Не набирается минимум гостей
+  | 'capacity_max'        // Alias for capacity check
+  | 'capacity_min'        // Alias for min guests
+  | 'location'            // Alias for location
+  | 'availability';       // Alias for date availability
 
 /**
  * Причина исключения поставщика
