@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,9 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Search, Star, MapPin, Heart, SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Search, Star, MapPin, Heart, SlidersHorizontal, ChevronLeft, ChevronRight, Sparkles, Users, Wallet, Palette } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { MatchScoreBadge } from "@/components/vendor/MatchScoreBadge";
+import { VendorMatchingEngine, type WeddingMatchParams } from "@/lib/matching-engine";
+import type { VendorMatchResult } from "@/types/vendor-attributes";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -29,36 +34,184 @@ const CATEGORY_IMAGES: Record<string, string> = {
   other: 'https://images.pexels.com/photos/1024993/pexels-photo-1024993.jpeg?auto=compress&cs=tinysrgb&w=600&h=300&fit=crop',
 };
 
+// Стили для фильтра
+const AVAILABLE_STYLES = [
+  'Классический', 'Современный', 'Богемный', 'Минималистичный', 
+  'Традиционный', 'Романтичный', 'Гламурный', 'Рустик', 'Винтаж'
+];
+
 // Описания для демо-поставщиков
 const DEMO_VENDORS = [
-  { id: 'demo-1', business_name: 'Royal Palace Venue', category: 'venue', location: 'Ташкент', price_range_min: 15000000, price_range_max: 60000000, rating: 4.8, total_reviews: 124, verified: true, isDemo: true, description: 'Роскошный банкетный зал с панорамными окнами и изысканным интерьером. Вместимость до 500 гостей.' },
-  { id: 'demo-2', business_name: 'Garden Bliss Venue', category: 'venue', location: 'Самарканд', price_range_min: 10000000, price_range_max: 35000000, rating: 4.6, total_reviews: 78, verified: true, isDemo: true, description: 'Живописная площадка с садом и фонтанами. Идеально для романтической свадьбы на природе.' },
-  { id: 'demo-3', business_name: 'UzPhoto Studio', category: 'photographer', location: 'Ташкент', price_range_min: 5000000, price_range_max: 15000000, rating: 4.9, total_reviews: 210, verified: true, isDemo: true, description: 'Профессиональная свадебная фотография с 10-летним опытом. Создаём незабываемые моменты.' },
-  { id: 'demo-4', business_name: 'Sam Video Pro', category: 'videographer', location: 'Самарканд', price_range_min: 7000000, price_range_max: 18000000, rating: 4.7, total_reviews: 95, verified: true, isDemo: true, description: 'Кинематографичная свадебная видеосъёмка с использованием дронов и современного оборудования.' },
-  { id: 'demo-5', business_name: 'Flora Boutique', category: 'florist', location: 'Бухара', price_range_min: 3000000, price_range_max: 10000000, rating: 4.5, total_reviews: 62, verified: true, isDemo: true, description: 'Свежие цветы и авторские композиции для вашего особенного дня. Доставка по всему Узбекистану.' },
-  { id: 'demo-6', business_name: 'Melody Band', category: 'music', location: 'Ташкент', price_range_min: 6000000, price_range_max: 20000000, rating: 4.7, total_reviews: 140, verified: true, isDemo: true, description: 'Живая музыка на любой вкус: от классики до современных хитов. Создаём атмосферу праздника!' },
+  { id: 'demo-1', business_name: 'Royal Palace Venue', category: 'venue', location: 'Ташкент', price_range_min: 15000000, price_range_max: 60000000, rating: 4.8, total_reviews: 124, verified: true, isDemo: true, description: 'Роскошный банкетный зал с панорамными окнами и изысканным интерьером. Вместимость до 500 гостей.', max_guests: 500, min_guests: 100, styles: ['Классический', 'Гламурный'] },
+  { id: 'demo-2', business_name: 'Garden Bliss Venue', category: 'venue', location: 'Самарканд', price_range_min: 10000000, price_range_max: 35000000, rating: 4.6, total_reviews: 78, verified: true, isDemo: true, description: 'Живописная площадка с садом и фонтанами. Идеально для романтической свадьбы на природе.', max_guests: 300, min_guests: 50, styles: ['Романтичный', 'Богемный'] },
+  { id: 'demo-3', business_name: 'UzPhoto Studio', category: 'photographer', location: 'Ташкент', price_range_min: 5000000, price_range_max: 15000000, rating: 4.9, total_reviews: 210, verified: true, isDemo: true, description: 'Профессиональная свадебная фотография с 10-летним опытом. Создаём незабываемые моменты.', styles: ['Современный', 'Классический'] },
+  { id: 'demo-4', business_name: 'Sam Video Pro', category: 'videographer', location: 'Самарканд', price_range_min: 7000000, price_range_max: 18000000, rating: 4.7, total_reviews: 95, verified: true, isDemo: true, description: 'Кинематографичная свадебная видеосъёмка с использованием дронов и современного оборудования.', styles: ['Современный'] },
+  { id: 'demo-5', business_name: 'Flora Boutique', category: 'florist', location: 'Бухара', price_range_min: 3000000, price_range_max: 10000000, rating: 4.5, total_reviews: 62, verified: true, isDemo: true, description: 'Свежие цветы и авторские композиции для вашего особенного дня. Доставка по всему Узбекистану.', styles: ['Романтичный', 'Классический'] },
+  { id: 'demo-6', business_name: 'Melody Band', category: 'music', location: 'Ташкент', price_range_min: 6000000, price_range_max: 20000000, rating: 4.7, total_reviews: 140, verified: true, isDemo: true, description: 'Живая музыка на любой вкус: от классики до современных хитов. Создаём атмосферу праздника!', styles: ['Современный', 'Традиционный'] },
 ];
 
 const Marketplace = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>(searchParams.get('category') || "all");
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
   const [minRating, setMinRating] = useState<number>(0);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000000]);
-  const [sortBy, setSortBy] = useState<string>("rating");
+  const [sortBy, setSortBy] = useState<string>("smart");
   const [vendors, setVendors] = useState<any[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [locations, setLocations] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  
+  // Smart Matching фильтры
+  const [smartMatchingEnabled, setSmartMatchingEnabled] = useState(false);
+  const [weddingParams, setWeddingParams] = useState<WeddingMatchParams | null>(null);
+  const [matchResults, setMatchResults] = useState<Map<string, VendorMatchResult>>(new Map());
+  const [guestCountFilter, setGuestCountFilter] = useState<number>(0);
+  const [selectedStyle, setSelectedStyle] = useState<string>("all");
+
+  // Загрузка параметров свадьбы
+  const loadWeddingParams = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: weddingPlan } = await supabase
+      .from('wedding_plans')
+      .select('*')
+      .eq('couple_user_id', user.id)
+      .maybeSingle();
+
+    if (weddingPlan) {
+      const params = await VendorMatchingEngine.getWeddingParams(weddingPlan.id);
+      if (params) {
+        setWeddingParams(params);
+        setSmartMatchingEnabled(true);
+        if (params.guestCount > 0) {
+          setGuestCountFilter(params.guestCount);
+        }
+        if (params.style) {
+          setSelectedStyle(params.style);
+        }
+      }
+    }
+  }, []);
+
+  // Локальный расчёт match score
+  const calculateLocalMatchScore = useCallback((
+    vendor: any,
+    params: WeddingMatchParams,
+    guestCount: number,
+    style: string,
+    budget: [number, number]
+  ): { score: number; reasons: any[]; excluded: boolean; exclusionReason?: any } => {
+    const reasons: any[] = [];
+    let score = 50; // Базовый score
+    
+    // Проверка вместимости (Hard Filter)
+    const maxGuests = vendor.max_guests || vendor.capacity_max;
+    const minGuests = vendor.min_guests || vendor.capacity_min;
+    
+    if (guestCount > 0) {
+      if (maxGuests && maxGuests < guestCount) {
+        return {
+          score: 0,
+          reasons: [],
+          excluded: true,
+          exclusionReason: {
+            filter: 'capacity_exceeded',
+            description: `Максимум ${maxGuests} гостей, нужно ${guestCount}`,
+            vendorValue: maxGuests,
+            requiredValue: guestCount,
+          },
+        };
+      }
+      if (minGuests && minGuests > guestCount) {
+        return {
+          score: 0,
+          reasons: [],
+          excluded: true,
+          exclusionReason: {
+            filter: 'min_guests_not_met',
+            description: `Минимум ${minGuests} гостей, у вас ${guestCount}`,
+            vendorValue: minGuests,
+            requiredValue: guestCount,
+          },
+        };
+      }
+      
+      // Идеальное совпадение вместимости
+      if (maxGuests && guestCount <= maxGuests * 0.8) {
+        score += 10;
+        reasons.push({
+          type: 'capacity',
+          score: 10,
+          description: `Комфортно для ${guestCount} гостей`,
+        });
+      }
+    }
+    
+    // Проверка стиля
+    if (style !== "all" && vendor.styles?.length) {
+      if (vendor.styles.includes(style)) {
+        score += 20;
+        reasons.push({
+          type: 'style',
+          score: 20,
+          description: `Работает в стиле "${style}"`,
+        });
+      }
+    }
+    
+    // Рейтинг
+    if (vendor.rating) {
+      const ratingScore = Math.round((vendor.rating / 5) * 15);
+      score += ratingScore;
+      reasons.push({
+        type: 'rating',
+        score: ratingScore,
+        description: `Рейтинг ${vendor.rating.toFixed(1)}/5`,
+      });
+    }
+    
+    // Бюджет
+    const vendorMinPrice = vendor.price_range_min || vendor.starting_price || 0;
+    if (vendorMinPrice > 0 && budget[1] > 0) {
+      if (vendorMinPrice <= budget[1]) {
+        score += 10;
+        reasons.push({
+          type: 'budget',
+          score: 10,
+          description: 'Вписывается в бюджет',
+        });
+      }
+    }
+    
+    // Верификация
+    if (vendor.verified) {
+      score += 5;
+      reasons.push({
+        type: 'verification',
+        score: 5,
+        description: 'Проверенный поставщик',
+      });
+    }
+    
+    return {
+      score: Math.min(100, score),
+      reasons,
+      excluded: false,
+    };
+  }, []);
 
   useEffect(() => {
     fetchVendors();
     fetchFavorites();
-  }, []);
+    loadWeddingParams();
+  }, [loadWeddingParams]);
 
   const fetchVendors = async () => {
     try {
@@ -156,6 +309,35 @@ const Marketplace = () => {
     }
   };
 
+  // Вычисление smart matching результатов
+  const computeSmartMatching = useCallback(async () => {
+    if (!smartMatchingEnabled || !weddingParams) return;
+
+    const results = new Map<string, VendorMatchResult>();
+    
+    for (const vendor of vendors) {
+      if (vendor.isDemo) continue;
+      
+      // Создаём упрощённый match для демонстрации
+      const matchScore = calculateLocalMatchScore(vendor, weddingParams, guestCountFilter, selectedStyle, priceRange);
+      
+      results.set(vendor.id, {
+        vendorId: vendor.id,
+        matchScore: matchScore.score,
+        reasons: matchScore.reasons,
+        excluded: matchScore.excluded,
+        exclusionReason: matchScore.exclusionReason,
+        availableOnDate: true,
+      });
+    }
+    
+    setMatchResults(results);
+  }, [vendors, weddingParams, smartMatchingEnabled, guestCountFilter, selectedStyle, priceRange]);
+
+  useEffect(() => {
+    computeSmartMatching();
+  }, [computeSmartMatching]);
+
   const filteredVendors = useMemo(() => {
     return vendors
       .filter((vendor) => {
@@ -164,13 +346,36 @@ const Marketplace = () => {
         const matchesLocation = selectedLocation === "all" || vendor.location === selectedLocation;
         const matchesRating = vendor.rating >= minRating;
         const matchesPrice = 
-          vendor.price_range_min >= priceRange[0] && 
-          vendor.price_range_max <= priceRange[1];
+          (vendor.price_range_min || 0) >= priceRange[0] && 
+          (vendor.price_range_max || 100000000) <= priceRange[1];
         
-        return matchesSearch && matchesCategory && matchesLocation && matchesRating && matchesPrice;
+        // Smart Matching фильтры
+        let matchesCapacity = true;
+        if (guestCountFilter > 0 && smartMatchingEnabled) {
+          const maxGuests = vendor.max_guests || vendor.capacity_max;
+          const minGuests = vendor.min_guests || vendor.capacity_min;
+          if (maxGuests && maxGuests < guestCountFilter) {
+            matchesCapacity = false;
+          }
+          if (minGuests && minGuests > guestCountFilter) {
+            matchesCapacity = false;
+          }
+        }
+        
+        let matchesStyle = true;
+        if (selectedStyle !== "all" && smartMatchingEnabled) {
+          matchesStyle = vendor.styles?.includes(selectedStyle) || false;
+        }
+        
+        return matchesSearch && matchesCategory && matchesLocation && matchesRating && matchesPrice && matchesCapacity && matchesStyle;
       })
       .sort((a, b) => {
         switch (sortBy) {
+          case "smart":
+            // Сортировка по match score
+            const scoreA = matchResults.get(a.id)?.matchScore || 0;
+            const scoreB = matchResults.get(b.id)?.matchScore || 0;
+            return scoreB - scoreA;
           case "rating":
             return (b.rating || 0) - (a.rating || 0);
           case "price_low":
@@ -183,12 +388,12 @@ const Marketplace = () => {
             return 0;
         }
       });
-  }, [vendors, searchQuery, selectedCategory, selectedLocation, minRating, priceRange, sortBy]);
+  }, [vendors, searchQuery, selectedCategory, selectedLocation, minRating, priceRange, sortBy, guestCountFilter, selectedStyle, smartMatchingEnabled, matchResults]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCategory, selectedLocation, minRating, priceRange, sortBy]);
+  }, [searchQuery, selectedCategory, selectedLocation, minRating, priceRange, sortBy, guestCountFilter, selectedStyle]);
 
   const totalPages = Math.ceil(filteredVendors.length / ITEMS_PER_PAGE);
   const paginatedVendors = filteredVendors.slice(
@@ -224,6 +429,14 @@ const Marketplace = () => {
                   <SelectValue placeholder="Сортировка" />
                 </SelectTrigger>
                 <SelectContent>
+                  {smartMatchingEnabled && (
+                    <SelectItem value="smart">
+                      <span className="flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        Умный подбор
+                      </span>
+                    </SelectItem>
+                  )}
                   <SelectItem value="rating">По рейтингу</SelectItem>
                   <SelectItem value="price_low">Цена: низкая</SelectItem>
                   <SelectItem value="price_high">Цена: высокая</SelectItem>
@@ -243,6 +456,84 @@ const Marketplace = () => {
 
             <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
               <CollapsibleContent className="space-y-4 pt-4 border-t">
+                {/* Smart Matching Toggle */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
+                  <div className="flex items-center gap-3">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    <div>
+                      <Label className="font-medium">Умный подбор</Label>
+                      <p className="text-xs text-muted-foreground">
+                        {weddingParams 
+                          ? `Фильтрация по параметрам вашей свадьбы (${weddingParams.guestCount} гостей)`
+                          : 'Создайте план свадьбы для персональных рекомендаций'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={smartMatchingEnabled}
+                    onCheckedChange={setSmartMatchingEnabled}
+                    disabled={!weddingParams}
+                  />
+                </div>
+
+                {/* Smart Matching Filters */}
+                {smartMatchingEnabled && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-3 rounded-lg bg-muted/50">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        Количество гостей
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          value={guestCountFilter || ''}
+                          onChange={(e) => setGuestCountFilter(Number(e.target.value) || 0)}
+                          placeholder="0"
+                          className="w-24"
+                        />
+                        <span className="text-sm text-muted-foreground">человек</span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium flex items-center gap-1">
+                        <Palette className="w-4 h-4" />
+                        Стиль свадьбы
+                      </Label>
+                      <Select value={selectedStyle} onValueChange={setSelectedStyle}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Любой стиль" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Любой стиль</SelectItem>
+                          {AVAILABLE_STYLES.map((style) => (
+                            <SelectItem key={style} value={style}>
+                              {style}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium flex items-center gap-1">
+                        <Wallet className="w-4 h-4" />
+                        Бюджет: до {(priceRange[1] / 1000000).toFixed(0)} млн
+                      </Label>
+                      <Slider
+                        value={[priceRange[1]]}
+                        onValueChange={(value) => setPriceRange([0, value[0]])}
+                        max={100000000}
+                        step={5000000}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Standard Filters */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Категория</label>
@@ -296,18 +587,20 @@ const Marketplace = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">
-                      Цена: {priceRange[0].toLocaleString()} - {priceRange[1].toLocaleString()} сум
-                    </label>
-                    <Slider
-                      value={priceRange}
-                      onValueChange={(value) => setPriceRange(value as [number, number])}
-                      max={100000000}
-                      step={1000000}
-                      className="w-full"
-                    />
-                  </div>
+                  {!smartMatchingEnabled && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Цена: {priceRange[0].toLocaleString()} - {priceRange[1].toLocaleString()} сум
+                      </label>
+                      <Slider
+                        value={priceRange}
+                        onValueChange={(value) => setPriceRange(value as [number, number])}
+                        max={100000000}
+                        step={1000000}
+                        className="w-full"
+                      />
+                    </div>
+                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -341,11 +634,17 @@ const Marketplace = () => {
                         alt={vendor.business_name}
                         className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                       />
-                      {vendor.verified && (
-                        <Badge variant="default" className="absolute top-3 left-3">
-                          Проверен
-                        </Badge>
-                      )}
+                      <div className="absolute top-3 left-3 flex gap-2">
+                        {vendor.verified && (
+                          <Badge variant="default">Проверен</Badge>
+                        )}
+                        {smartMatchingEnabled && matchResults.get(vendor.id) && (
+                          <MatchScoreBadge 
+                            matchResult={matchResults.get(vendor.id)} 
+                            size="sm"
+                          />
+                        )}
+                      </div>
                       {!vendor.isDemo && (
                         <Button
                           variant="ghost"
@@ -407,9 +706,29 @@ const Marketplace = () => {
 
               {filteredVendors.length === 0 && (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground">
-                    Поставщики не найдены. Попробуйте изменить фильтры.
-                  </p>
+                  <div className="space-y-2">
+                    <p className="text-muted-foreground">
+                      Поставщики не найдены по заданным критериям.
+                    </p>
+                    {smartMatchingEnabled && guestCountFilter > 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        Попробуйте уменьшить количество гостей или измените стиль.
+                      </p>
+                    )}
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setGuestCountFilter(0);
+                        setSelectedStyle("all");
+                        setPriceRange([0, 100000000]);
+                        setMinRating(0);
+                        setSelectedCategory("all");
+                        setSelectedLocation("all");
+                      }}
+                    >
+                      Сбросить фильтры
+                    </Button>
+                  </div>
                 </div>
               )}
 
