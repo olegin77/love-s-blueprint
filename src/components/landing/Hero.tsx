@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Sparkles, Heart, ArrowRight } from "lucide-react";
+import { Sparkles, Heart, ArrowRight, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
@@ -24,23 +24,35 @@ export const Hero = () => {
           alt="Elegant wedding couple"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/85 to-background/60" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/98 via-background/90 to-background/70" />
+        <div className="absolute inset-0 bg-mesh opacity-60" />
       </div>
 
       {/* Decorative Elements */}
-      <div className="absolute top-20 left-10 animate-float">
-        <Heart className="w-12 h-12 text-primary/20" />
+      <div className="absolute top-32 left-10 animate-float">
+        <div className="w-16 h-16 rounded-2xl glass-card flex items-center justify-center glow">
+          <Heart className="w-8 h-8 text-primary fill-primary/50" />
+        </div>
       </div>
       <div className="absolute bottom-40 right-20 animate-float" style={{ animationDelay: "1s" }}>
-        <Sparkles className="w-16 h-16 text-primary/20" />
+        <div className="w-20 h-20 rounded-3xl glass-card flex items-center justify-center glow-lg">
+          <Sparkles className="w-10 h-10 text-primary" />
+        </div>
+      </div>
+      <div className="absolute top-1/2 right-32 animate-float hidden lg:flex" style={{ animationDelay: "0.5s" }}>
+        <div className="w-12 h-12 rounded-xl glass-card flex items-center justify-center">
+          <div className="w-3 h-3 rounded-full bg-gradient-hero" />
+        </div>
       </div>
 
       {/* Content */}
-      <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 pt-20">
         <div className="max-w-3xl animate-fade-in">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/50 backdrop-blur-sm border border-primary/20 mb-6">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl glass-card mb-8 animate-scale-in">
+            <div className="w-2 h-2 rounded-full bg-gradient-hero animate-pulse" />
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-accent-foreground">
+            <span className="text-sm font-medium text-foreground">
               Первая AI-платформа в Узбекистане
             </span>
           </div>
@@ -51,47 +63,54 @@ export const Hero = () => {
               мечту о свадьбе
             </span>
             <br />
-            ещё до её начала
+            <span className="text-foreground/90">ещё до её начала</span>
           </h1>
 
-          <p className="text-xl sm:text-2xl text-muted-foreground mb-8 leading-relaxed">
+          <p className="text-xl sm:text-2xl text-muted-foreground mb-10 leading-relaxed max-w-2xl">
             Революционная платформа с AI-визуализацией превратит планирование вашей свадьбы в волшебное путешествие
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4">
             <Button
               size="lg"
-              className="text-lg h-14 px-8 shadow-elegant hover:shadow-xl transition-all"
+              className="text-lg h-14 px-8 bg-gradient-hero shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 group"
               onClick={() => navigate(isAuthenticated ? '/dashboard' : '/auth')}
             >
               Начать планирование
-              <ArrowRight className="ml-2 w-5 h-5" />
+              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
 
             <Button
               size="lg"
               variant="outline"
-              className="text-lg h-14 px-8 border-2 hover:bg-accent"
+              className="text-lg h-14 px-8 glass-button border-2 hover:bg-accent/50 group"
               onClick={() => navigate(isAuthenticated ? '/ai-visualizer' : '/auth')}
             >
-              Посмотреть примеры
+              <Play className="mr-2 w-5 h-5 group-hover:scale-110 transition-transform" />
+              Смотреть демо
             </Button>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-6 mt-12 pt-12 border-t border-border/50">
-            <div>
-              <div className="text-3xl font-bold text-primary mb-1">1500+</div>
-              <div className="text-sm text-muted-foreground">Поставщиков</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-primary mb-1">10K+</div>
-              <div className="text-sm text-muted-foreground">Свадеб</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-primary mb-1">98%</div>
-              <div className="text-sm text-muted-foreground">Довольны</div>
-            </div>
+          {/* Stats with glass cards */}
+          <div className="grid grid-cols-3 gap-4 mt-14 pt-8">
+            {[
+              { value: "1500+", label: "Поставщиков" },
+              { value: "10K+", label: "Свадеб" },
+              { value: "98%", label: "Довольны" },
+            ].map((stat, i) => (
+              <div
+                key={i}
+                className="glass-card p-4 text-center hover:scale-105 transition-transform duration-300"
+                style={{ animationDelay: `${i * 0.1}s` }}
+              >
+                <div className="text-2xl sm:text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent mb-1">
+                  {stat.value}
+                </div>
+                <div className="text-xs sm:text-sm text-muted-foreground">
+                  {stat.label}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

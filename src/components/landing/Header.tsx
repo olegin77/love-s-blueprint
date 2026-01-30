@@ -36,22 +36,26 @@ export const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
+    <header className="fixed top-0 left-0 right-0 z-50 glass-panel">
       <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center gap-2">
-            <Heart className="w-6 h-6 text-primary fill-primary" />
-            <span className="text-xl font-bold">WeddingTech UZ</span>
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-hero flex items-center justify-center shadow-lg glow">
+              <Heart className="w-5 h-5 text-white fill-white" />
+            </div>
+            <span className="text-xl font-bold bg-gradient-hero bg-clip-text text-transparent">
+              WeddingTech
+            </span>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-1">
             {navigation.map((item) => (
               <button
                 key={item.name}
                 onClick={() => scrollToSection(item.href)}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg transition-all duration-200"
               >
                 {item.name}
               </button>
@@ -61,21 +65,35 @@ export const Header = () => {
           {/* Actions */}
           <div className="hidden md:flex items-center gap-2">
             <LanguageSwitcher />
-            <Button variant="outline" onClick={() => navigate('/install')}>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="glass-button border-0 bg-transparent hover:bg-accent/50"
+              onClick={() => navigate('/install')}
+            >
               <Download className="w-4 h-4 mr-2" />
               {t('nav.install')}
             </Button>
-            <Button variant="ghost" onClick={() => navigate('/auth')}>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="hover:bg-accent/50"
+              onClick={() => navigate('/auth')}
+            >
               {t('nav.signIn')}
             </Button>
-            <Button onClick={() => navigate('/auth')}>
+            <Button 
+              size="sm"
+              className="bg-gradient-hero shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              onClick={() => navigate('/auth')}
+            >
               {t('hero.cta')}
             </Button>
           </div>
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden p-2"
+            className="md:hidden p-2 rounded-xl hover:bg-accent/50 transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? (
@@ -88,8 +106,8 @@ export const Header = () => {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border/50">
-            <div className="flex flex-col gap-4">
+          <div className="md:hidden py-4 animate-fade-in">
+            <div className="flex flex-col gap-1 glass-card p-3 rounded-2xl">
               {navigation.map((item) => (
                 <button
                   key={item.name}
@@ -97,16 +115,16 @@ export const Header = () => {
                     scrollToSection(item.href);
                     setMobileMenuOpen(false);
                   }}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors text-left"
+                  className="px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-xl transition-all text-left"
                 >
                   {item.name}
                 </button>
               ))}
-              <div className="flex flex-col gap-2 pt-4 border-t border-border/50">
+              <div className="flex flex-col gap-2 pt-3 mt-2 border-t border-border/50">
                 <LanguageSwitcher />
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full justify-start glass-button"
                   onClick={() => navigate('/install')}
                 >
                   <Download className="w-4 h-4 mr-2" />
@@ -114,13 +132,13 @@ export const Header = () => {
                 </Button>
                 <Button 
                   variant="ghost" 
-                  className="w-full"
+                  className="w-full justify-start"
                   onClick={() => navigate('/auth')}
                 >
                   {t('nav.signIn')}
                 </Button>
                 <Button 
-                  className="w-full"
+                  className="w-full bg-gradient-hero shadow-lg"
                   onClick={() => navigate('/auth')}
                 >
                   {t('hero.cta')}
