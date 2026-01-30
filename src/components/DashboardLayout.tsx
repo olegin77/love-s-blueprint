@@ -9,21 +9,26 @@ interface DashboardLayoutProps {
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full bg-mesh">
         <AppSidebar />
         
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 md:h-16 border-b border-border flex items-center justify-between px-3 md:px-4 bg-background/95 backdrop-blur-sm sticky top-0 z-10 safe-top">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger className="touch-target" />
-              <div className="flex items-center gap-2 md:hidden">
-                <Heart className="w-5 h-5 text-primary fill-primary" />
-                <span className="font-semibold text-sm">WeddingTech</span>
+          {/* Glass header */}
+          <header className="h-14 md:h-16 glass-panel border-b-0 flex items-center justify-between px-3 md:px-4 sticky top-0 z-10 safe-top">
+            <div className="flex items-center gap-3">
+              <SidebarTrigger className="touch-target rounded-xl hover:bg-accent/50 transition-colors" />
+              <div className="flex items-center gap-2.5 md:hidden">
+                <div className="w-8 h-8 rounded-lg bg-gradient-hero flex items-center justify-center shadow-md glow">
+                  <Heart className="w-4 h-4 text-white fill-white" />
+                </div>
+                <span className="font-semibold text-sm bg-gradient-hero bg-clip-text text-transparent">
+                  WeddingTech
+                </span>
               </div>
             </div>
           </header>
 
-          <main className="flex-1 p-4 md:p-6 bg-gradient-elegant overflow-x-hidden safe-bottom">
+          <main className="flex-1 p-4 md:p-6 overflow-x-hidden safe-bottom">
             {children}
           </main>
         </div>

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Video, Image as ImageIcon, Wand2 } from "lucide-react";
+import { Sparkles, Video, Image as ImageIcon, Wand2, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
@@ -79,20 +79,23 @@ export const AIShowcase = () => {
   };
 
   return (
-    <section className="py-24">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <Badge className="mb-4" variant="secondary">
-            <Wand2 className="w-4 h-4 mr-2" />
-            Powered by AI
-          </Badge>
-          <h2 className="text-4xl sm:text-5xl font-bold mb-4">
+    <section className="py-24 relative overflow-hidden">
+      {/* Background mesh */}
+      <div className="absolute inset-0 bg-mesh opacity-50" />
+      
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="text-center max-w-3xl mx-auto mb-20">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-6 animate-scale-in">
+            <Wand2 className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium">Powered by AI</span>
+          </div>
+          <h2 className="text-4xl sm:text-5xl font-bold mb-4 animate-fade-in">
             Технологии будущего уже{" "}
             <span className="bg-gradient-hero bg-clip-text text-transparent">
               сегодня
             </span>
           </h2>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-xl text-muted-foreground animate-fade-in" style={{ animationDelay: "0.1s" }}>
             Первая платформа в СНГ с AI-визуализацией свадеб
           </p>
         </div>
@@ -107,44 +110,55 @@ export const AIShowcase = () => {
             >
               {/* Image */}
               <div className="flex-1 animate-fade-in">
-                <div className="relative rounded-2xl overflow-hidden shadow-elegant group">
+                <div className="relative rounded-3xl overflow-hidden glass-card group">
                   <img
                     src={item.image}
                     alt={item.title}
-                    className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  {/* Glass overlay on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  
+                  {/* Floating badge */}
+                  <div className="absolute top-4 left-4">
+                    <Badge className="glass-card border-0 px-4 py-2 text-sm font-medium">
+                      <item.icon className="w-4 h-4 mr-2 text-primary" />
+                      {item.badge}
+                    </Badge>
+                  </div>
                 </div>
               </div>
 
               {/* Content */}
               <div className="flex-1 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-                <Badge className="mb-4" variant="outline">
-                  <item.icon className="w-4 h-4 mr-2" />
-                  {item.badge}
-                </Badge>
-                <h3 className="text-3xl font-bold mb-4">{item.title}</h3>
-                <p className="text-lg text-muted-foreground mb-6">
-                  {item.description}
-                </p>
+                <div className="glass-card p-8 rounded-3xl">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-hero flex items-center justify-center mb-6 glow">
+                    <item.icon className="w-7 h-7 text-white" />
+                  </div>
+                  
+                  <h3 className="text-3xl font-bold mb-4">{item.title}</h3>
+                  <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
+                    {item.description}
+                  </p>
 
-                <ul className="space-y-3 mb-8">
-                  {item.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-gradient-hero" />
-                      <span className="text-foreground">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+                  <ul className="space-y-3 mb-8">
+                    {item.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-gradient-hero glow" />
+                        <span className="text-foreground">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
 
-                <Button 
-                  size="lg" 
-                  className="shadow-elegant"
-                  onClick={() => handleNavigate(item.link)}
-                >
-                  Попробовать сейчас
-                  <item.icon className="ml-2 w-5 h-5" />
-                </Button>
+                  <Button 
+                    size="lg" 
+                    className="bg-gradient-hero shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group"
+                    onClick={() => handleNavigate(item.link)}
+                  >
+                    Попробовать сейчас
+                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
