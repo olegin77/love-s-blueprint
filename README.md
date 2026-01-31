@@ -2,9 +2,10 @@
 
 **Первая в Узбекистане и СНГ AI-платформа для планирования свадеб**
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
-![Status](https://img.shields.io/badge/status-in%20development-yellow)
+![Version](https://img.shields.io/badge/version-2.0.0-blue)
+![Status](https://img.shields.io/badge/status-production%20ready-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
+![Tests](https://img.shields.io/badge/tests-9%20passing-brightgreen)
 
 ---
 
@@ -12,37 +13,45 @@
 
 **WeddingTech UZ** — революционная платформа, которая позволяет парам увидеть свою будущую свадьбу ещё до её проведения благодаря передовым AI-технологиям.
 
-### ✨ Ключевые Инновации
+### ✨ Реализованный Функционал
 
-- **🎨 AI Wedding Visualizer** - Реалистичная 3D визуализация будущей свадьбы
-- **💌 AI Invitation Creator** - Автоматическое создание видео-приглашений
-- **👗 Virtual Try-On** - Виртуальная примерка свадебных нарядов
-- **💰 FinTech Solutions** - Escrow платежи, реестр подарков, рассрочка
-- **📊 Smart Planner** - AI-рекомендации по бюджету и timeline
-- **🏪 Vendor Marketplace** - 1500+ верифицированных поставщиков
+| Модуль | Статус | Описание |
+|--------|--------|----------|
+| 🎨 AI Wedding Visualizer | ✅ | Генерация изображений свадьбы в 6 стилях |
+| 🏛️ AI Venue Designer | ✅ | Визуализация декора в реальных площадках |
+| 💌 AI Invitation Creator | ✅ | Автоматическое создание приглашений |
+| 🎤 Voice RSVP | ✅ | Голосовой AI-агент для сбора ответов гостей |
+| 📱 Telegram Bot | ✅ | RSVP через Telegram |
+| 💰 Smart Budget | ✅ | AI-оптимизация бюджета с подбором вендоров |
+| 🪑 Smart Seating | ✅ | AI-рассадка 500+ гостей с учётом связей |
+| 💳 Escrow Payments | ✅ | Безопасные платежи через Payme/Click/Uzum |
+| 🎁 Gift Registry | ✅ | Реестр подарков с взносами |
+| 🏆 Gamification | ✅ | Достижения и прогресс планирования |
+| 🌐 Wedding Website | ✅ | Конструктор свадебного сайта |
+| 📧 RSVP Portal | ✅ | Цифровые приглашения с отслеживанием |
 
 ---
 
 ## 🏗️ Технологический Стек
 
 ### Frontend
-- **Framework**: React 18.3 + Vite
-- **Language**: TypeScript
+- **Framework**: React 18.3 + Vite + TypeScript
 - **UI Library**: Tailwind CSS + shadcn/ui
-- **State Management**: TanStack Query
-- **Routing**: React Router v6
+- **State**: TanStack Query v5
+- **Animations**: Framer Motion
+- **i18n**: i18next (RU, UZ, EN)
+- **PWA**: vite-plugin-pwa + Workbox
 
 ### Backend (Lovable Cloud)
-- **Database**: PostgreSQL + Prisma ORM
+- **Database**: PostgreSQL + Row Level Security
 - **Authentication**: Supabase Auth
-- **Storage**: Supabase Storage
-- **Edge Functions**: Serverless TypeScript functions
+- **Storage**: Supabase Storage (avatars, portfolio)
+- **Edge Functions**: 12 Deno serverless functions
 
-### AI Services (Planned)
-- **Image Generation**: Stable Diffusion / DALL-E 3
-- **Face Mapping**: Face Recognition API
-- **Video Generation**: Runway ML / Sora
-- **Text Generation**: GPT-4 / Gemini
+### AI Services
+- **Lovable AI Gateway**: google/gemini-2.5-flash
+- **Voice**: ElevenLabs Conversational AI
+- **Image Generation**: Lovable AI (flux models)
 
 ---
 
@@ -50,101 +59,130 @@
 
 ### Требования
 - Node.js >= 20.0.0
-- pnpm >= 9.0.0
+- Bun или npm
 
 ### Установка
 
 ```bash
 # Клонировать репозиторий
-git clone https://github.com/yourusername/wedding_lovable.git
-cd wedding_lovable
+git clone https://github.com/yourusername/weddingtech-uz.git
+cd weddingtech-uz
 
 # Установить зависимости
-pnpm install
+bun install
 
 # Запустить dev сервер
-pnpm dev
+bun dev
 ```
 
 Приложение будет доступно по адресу: `http://localhost:8080`
+
+### Тестирование
+
+```bash
+# Запустить unit тесты
+bun test
+
+# Запустить с watch mode
+bun test --watch
+```
 
 ---
 
 ## 📦 Структура Проекта
 
 ```
-wedding_lovable/
+weddingtech-uz/
 ├── src/
-│   ├── components/        # React компоненты
-│   │   ├── ui/           # shadcn/ui компоненты
-│   │   ├── landing/      # Landing page компоненты
-│   │   ├── marketplace/  # Vendor marketplace
-│   │   └── planner/      # Wedding planner
-│   ├── pages/            # Страницы приложения
-│   ├── hooks/            # Custom React hooks
-│   ├── lib/              # Утилиты и хелперы
-│   ├── types/            # TypeScript типы
-│   └── assets/           # Статические файлы
-├── public/               # Публичные файлы
-└── docs/                 # Документация
+│   ├── components/
+│   │   ├── ui/              # shadcn/ui компоненты
+│   │   ├── landing/         # Landing page (Hero, Features, Stats)
+│   │   ├── budget/          # Budget tracker
+│   │   ├── seating/         # Seating chart canvas
+│   │   ├── gamification/    # Achievements, Progress
+│   │   ├── gifts/           # Gift registry
+│   │   ├── payment/         # Escrow, QR payments
+│   │   ├── vendor/          # Vendor profiles, comparison
+│   │   ├── communication/   # Voice RSVP, Telegram
+│   │   └── onboarding/      # Wedding wizard
+│   ├── pages/               # 25+ страниц
+│   ├── hooks/               # Custom hooks (smart matching, etc.)
+│   ├── services/            # AI services
+│   ├── i18n/                # Локализация (RU, UZ, EN)
+│   └── integrations/        # Supabase client
+├── supabase/
+│   ├── functions/           # 12 Edge Functions
+│   ├── migrations/          # Database migrations
+│   └── seed.sql             # Sample vendor data
+└── public/                  # PWA icons, manifest
 ```
 
 ---
 
-## 🎯 Roadmap
+## 🔐 Настройка Секретов
 
-### Phase 0: Foundation ✅
-- [x] Project setup
-- [x] Design system
-- [x] Landing page
+Перед production деплоем добавьте API ключи. Подробная инструкция в файле **[SETUP_SECRETS.md](./SETUP_SECRETS.md)**.
 
-### Phase 1: Core Features (In Progress)
-- [ ] User authentication
-- [ ] Vendor marketplace
-- [ ] Wedding planner
-- [ ] Budget calculator
+### Обязательные
+- `ELEVENLABS_API_KEY` — для Voice RSVP
+- `TELEGRAM_BOT_TOKEN` — для Telegram интеграции
 
-### Phase 2: AI Features
-- [ ] AI Wedding Visualizer
-- [ ] AI Invitation Creator
-- [ ] Virtual Try-On
-
-### Phase 3: FinTech
-- [ ] Escrow payments
-- [ ] Gift registry
-- [ ] Installment plans
-
-### Phase 4: Mobile
-- [ ] React Native app
-- [ ] iOS & Android
+### Опциональные
+- `OPENAI_API_KEY` — для расширенных AI функций
+- `RESEND_API_KEY` — для email уведомлений
+- `PAYME_MERCHANT_ID` / `CLICK_MERCHANT_ID` — для платежей
 
 ---
 
-## 👥 Для Кого Эта Платформа
+## 📱 PWA Возможности
 
-### 💑 Для Пар
-- Визуализация свадьбы с AI
-- Планирование бюджета
-- Поиск поставщиков
-- Создание приглашений
-- Управление гостями
+Приложение работает как Progressive Web App:
 
-### 🎭 Для Поставщиков
-- Профессиональное портфолио
-- Lead generation
-- Booking система
-- Аналитика бизнеса
-- Безопасные платежи
+- ✅ Установка на устройство (iOS, Android, Desktop)
+- ✅ Offline режим (кэширование данных)
+- ✅ Push уведомления
+- ✅ Fullscreen режим
+
+Страница установки: `/install`
+
+---
+
+## 🎯 Роадмап
+
+### ✅ Завершено (v2.0)
+- [x] AI Visual Design & Inpainting
+- [x] UZ Localization (multi-event: Osh, Nikoh, Fotiha, Toy)
+- [x] Smart Guest Seating AI
+- [x] Fintech Escrow & QR-Pay
+- [x] AI Communications (Voice + Telegram)
+- [x] Premium Features (Gifts + Gamification)
+
+### 🔜 Планируется (v2.1)
+- [ ] Mobile app (React Native)
+- [ ] Vendor analytics dashboard
+- [ ] AI photo/video editing
+- [ ] Multi-wedding support
+
+---
+
+## 👥 Роли Пользователей
+
+| Роль | Описание |
+|------|----------|
+| **Couple** | Молодожёны — полный доступ к планированию |
+| **Vendor** | Поставщики — управление профилем, бронированиями |
+| **Admin** | Администраторы — модерация, верификация |
 
 ---
 
 ## 📊 Рынок
 
-### Узбекистан
-- **305,082** свадеб в год
-- **$15,000-30,000** средний бюджет
-- **$6.1 млрд** объём рынка
-- **300-1000** гостей на свадьбе
+| Метрика | Значение |
+|---------|----------|
+| Свадеб в год (UZ) | 305,000+ |
+| Средний бюджет | $15,000-30,000 |
+| Объём рынка | $6.1 млрд |
+| Гостей на свадьбе | 300-1000 |
 
 ### Целевые рынки
 - 🇺🇿 Узбекистан (Primary)
@@ -153,9 +191,17 @@ wedding_lovable/
 
 ---
 
-## 🤝 Вклад в Проект
+## 📝 Документация
 
-Мы приветствуем contributions! Пожалуйста:
+- [PROJECT_CONCEPT.md](./PROJECT_CONCEPT.md) — Полная концепция и архитектура
+- [PROGRESS.md](./PROGRESS.md) — Детальный progress tracker
+- [SETUP_SECRETS.md](./SETUP_SECRETS.md) — Настройка API ключей
+- [PWA_GUIDE.md](./PWA_GUIDE.md) — PWA инструкции
+- [PAYMENT_SETUP.md](./PAYMENT_SETUP.md) — Настройка платежей
+
+---
+
+## 🤝 Вклад в Проект
 
 1. Fork проект
 2. Создайте feature branch (`git checkout -b feature/AmazingFeature`)
@@ -167,25 +213,16 @@ wedding_lovable/
 
 ## 📝 Лицензия
 
-Этот проект лицензирован под MIT License - см. [LICENSE](LICENSE) файл.
+Этот проект лицензирован под MIT License.
 
 ---
 
 ## 📞 Контакты
 
 **WeddingTech UZ Team**
-- Website: [weddingtech.uz](https://weddingtech.uz)
-- Email: info@weddingtech.uz
+- Website: [weddingtech.uz](https://wedding.lovable.app)
 - Telegram: @weddingtechuz
 
 ---
 
-## 🙏 Благодарности
-
-- [Lovable](https://lovable.dev) - За платформу разработки
-- [shadcn/ui](https://ui.shadcn.com) - За UI компоненты
-- [Tailwind CSS](https://tailwindcss.com) - За CSS framework
-
----
-
-**Made with ❤️ in Uzbekistan**
+**Made with ❤️ in Uzbekistan | Powered by Lovable**
