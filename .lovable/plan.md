@@ -1,161 +1,166 @@
 
-# Исправление пульсирующей кнопки + Мобильная оптимизация как приложение
+# Тестирование и исправление мобильной версии + Ребрендинг на "Weddinguz"
+
+## Обнаруженные проблемы
+
+### Критические (Mobile UI)
+| # | Проблема | Локация |
+|---|----------|---------|
+| 1 | Текст "мечту о свадьбе" не отображается в Hero секции | `Hero.tsx` |
+| 2 | Footer содержит `animate-pulse` на иконке (запрещённая анимация) | `Footer.tsx` line 104 |
+| 3 | Главная страница (/) не имеет нижней навигации для мобильных | `Index.tsx` / `DashboardLayout.tsx` |
+
+### Ребрендинг "WeddingTech" → "Weddinguz"
+Название и бренд упоминаются в 17+ файлах. Необходимо заменить везде:
+
+| Файл | Текущее значение | Новое значение |
+|------|------------------|----------------|
+| `vite.config.ts` | `name: 'WeddingTech UZ'`, `short_name: 'WeddingTech'` | `name: 'Weddinguz'`, `short_name: 'Weddinguz'` |
+| `index.html` | `<title>WeddingTech UZ...`, `apple-mobile-web-app-title="WeddingTech"`, `og:title="WeddingTech UZ..."` | `Weddinguz` везде |
+| `src/components/DashboardLayout.tsx` line 51 | `WeddingTech` | `Weddinguz` |
+| `src/components/AppSidebar.tsx` line 131 | `WeddingTech` | `Weddinguz` |
+| `src/components/landing/Header.tsx` line 96 | `WeddingTech` | `Weddinguz` |
+| `src/components/landing/Footer.tsx` lines 54-55, 100 | `WeddingTech UZ` | `Weddinguz` |
+| `src/pages/Auth.tsx` line 165, 185 | `WeddingTech UZ` | `Weddinguz` |
+| `src/pages/Install.tsx` lines 52, 65, 79 | `WeddingTech UZ` | `Weddinguz` |
+| `src/pages/WeddingWebsite.tsx` line 313 | `WeddingTech UZ` | `Weddinguz` |
+| `src/i18n/locales/en.json` line 206 | `WeddingTech UZ` | `Weddinguz` |
+| `src/i18n/locales/ru.json` line 206 | `WeddingTech UZ` | `Weddinguz` |
+| Edge Functions (5 файлов) | `WeddingTech UZ` | `Weddinguz` |
 
 ---
 
-## Часть 1: Устранение ВСЕХ пульсирующих/мигающих анимаций
+## План исправлений
 
-### Проблема
-Кнопка "Начать планирование" в Header продолжает "гореть и мелькать" из-за:
-1. **`.gradient-luxe`** в `index.css` — содержит `animation: gradient-shift 8s ease infinite`
-2. **`GradientButton.tsx`** — содержит `repeat: Infinity` в анимации background
-3. Множество других `repeat: Infinity` по всему проекту
+### Часть 1: Исправление Hero секции (текст не отображается)
 
-### Решение
-Удалить ВСЕ бесконечные анимации кроме очень медленных фоновых (30+ секунд).
+Проблема в `TextReveal` компоненте или анимации. Текст "мечту о свадьбе" исчезает.
 
-| Файл | Изменение |
-|------|-----------|
-| `src/index.css` | Удалить `animation: gradient-shift` из `.gradient-luxe`, удалить `sparkle-sweep infinite`, удалить `blob-morph infinite`, удалить `milestone-glow infinite`, удалить `pulse-subtle infinite`, удалить `bounce-subtle infinite`, удалить `float infinite`, замедлить `aurora-float` до 60s |
-| `src/components/landing/GradientButton.tsx` | Удалить `repeat: Infinity` из animated mesh gradient, сделать статичный |
-| `src/components/landing/Pricing.tsx` | Удалить `repeat: Infinity` из декоративных элементов |
-| `src/components/landing/AnimatedSection.tsx` | Удалить `repeat: Infinity` |
-| `src/components/DashboardLayout.tsx` | Удалить `repeat: Infinity` из лого Heart |
-| `src/pages/Dashboard.tsx` | Удалить бесконечные shimmer и rotate анимации |
+**Решение:** Упростить Hero заголовок для мобильных - убрать сложные анимации `TextReveal`, сделать простой статичный текст на мобильных:
 
----
-
-## Часть 2: Hero без фото — премиум фон
-
-### Заменяем Hero image на:
-- **Mesh gradient** — анимированный (60s, почти незаметный)
-- **Aurora effect** — мягкие переливающиеся цвета
-- **Floating blobs** — очень медленные (45s+)
-- **Без фотографии** — чистый минималистичный дизайн
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                                                             │
-│   ╭─────────────────────────────────────────────────────╮   │
-│   │                                                     │   │
-│   │              🌟 MESH GRADIENT                       │   │
-│   │                                                     │   │
-│   │      Rose Gold ──────────►  Champagne               │   │
-│   │            ↓                    ↓                   │   │
-│   │        Burgundy  ◄────────  Ivory                   │   │
-│   │                                                     │   │
-│   │              (очень медленная анимация 60s)         │   │
-│   ╰─────────────────────────────────────────────────────╯   │
-│                                                             │
-│   + Floating semi-transparent blobs (45s animation)         │
-│   + Subtle noise texture overlay                            │
-│   + Soft radial gradient vignette                           │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+```tsx
+// Hero.tsx - упрощённый заголовок
+<h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold leading-tight">
+  {isMobile ? (
+    // Статичный текст для мобильных
+    <>
+      <span className="block text-gradient-animated">Увидьте свою</span>
+      <span className="block text-gradient-animated">мечту о свадьбе</span>
+      <span className="block text-foreground/85 mt-2">ещё до её начала</span>
+    </>
+  ) : (
+    // Анимированный текст для десктопа
+    <>
+      <TextReveal text="Увидьте свою" className="block" delay={0.3} />
+      <TextReveal text="мечту о свадьбе" className="block" delay={0.5} gradient />
+      ...
+    </>
+  )}
+</h1>
 ```
 
----
+### Часть 2: Удаление animate-pulse из Footer
 
-## Часть 3: Мобильная версия как приложение
+```tsx
+// Footer.tsx line 104 - БЫЛО:
+<Heart className="inline w-4 h-4 text-primary fill-primary animate-pulse" />
 
-### 3.1 Нижняя навигация (Bottom Navigation Bar)
-
-```
-┌─────────────────────────────────────────┐
-│  ┌───────────────────────────────────┐  │
-│  │           CONTENT AREA            │  │
-│  │                                   │  │
-│  │    (страницы dashboard и др.)     │  │
-│  │                                   │  │
-│  └───────────────────────────────────┘  │
-│                                         │
-│  ╔═══════════════════════════════════╗  │
-│  ║  🏠     📅     ⭐     👤    ⚙️   ║  │ ← Bottom Nav
-│  ║ Home  Planner  AI   Profile  More ║  │
-│  ╚═══════════════════════════════════╝  │
-└─────────────────────────────────────────┘
+// Footer.tsx line 104 - СТАНЕТ:
+<Heart className="inline w-4 h-4 text-primary fill-primary" />
 ```
 
-**Создаём новый компонент: `src/components/BottomNavigation.tsx`**
-- 5 основных пунктов: Главная, Планировщик, AI (центральная акцентная), Профиль, Ещё
-- Показывается только на мобильных (`md:hidden`)
-- Glass-effect + safe-area-inset-bottom
-- Активный пункт с градиентом
-- Haptic-like feedback анимация
+### Часть 3: Ребрендинг на "Weddinguz"
 
-### 3.2 Обновление DashboardLayout
+#### 3.1 Логотип
+Создать более уникальный логотип вместо простого сердца:
+- Стилизованная буква "W" с обручальными кольцами
+- Или текстовый логотип "Weddinguz" с акцентным градиентом
 
-```
-┌────────────────────────────────────────┐
-│ ┌──────────────────────────────────┐   │
-│ │  WeddingTech  🔔            ☰   │   │ ← Compact Header (mobile)
-│ └──────────────────────────────────┘   │
-│                                        │
-│  ┌──────────────────────────────────┐  │
-│  │                                  │  │
-│  │          MAIN CONTENT            │  │
-│  │                                  │  │
-│  │     (with bottom padding for     │  │
-│  │      safe-area + bottom nav)     │  │
-│  │                                  │  │
-│  └──────────────────────────────────┘  │
-│                                        │
-│  ╔══════════════════════════════════╗  │
-│  ║    Bottom Navigation (mobile)    ║  │
-│  ╚══════════════════════════════════╝  │
-└────────────────────────────────────────┘
-```
+#### 3.2 Замена названия во всех файлах
 
-### 3.3 Оптимизация мобильной главной страницы (/)
+| Группа файлов | Количество замен |
+|---------------|------------------|
+| Config (vite, index.html) | ~8 замен |
+| Components | ~6 замен |
+| Pages | ~5 замен |
+| i18n локали | ~3 замены |
+| Edge Functions | ~15 замен |
 
-| Элемент | Изменение |
-|---------|-----------|
-| Header | Компактный на мобильных, hamburger menu |
-| Hero | Уменьшенные отступы, меньше декоративных элементов |
-| Stats | Горизонтальный scroll на мобильных |
-| Features | Вертикальный stack вместо grid |
-| CTA | Фиксированная sticky кнопка внизу |
+### Часть 4: Улучшение мобильной навигации на главной
 
-### 3.4 Оптимизации производительности
+Главная страница (/) не использует `DashboardLayout`, поэтому `BottomNavigation` там не отображается. Варианты решения:
 
-1. **Отключение тяжёлых анимаций на мобильных**
-   - `useIsMobile()` хук для условного рендера
-   - Убрать parallax на мобильных
-   - Упростить ParticleBackground
+**Вариант A (рекомендуется):** Добавить отдельную мобильную навигацию на главную страницу
+- Sticky CTA кнопка внизу экрана на мобильных
+- Упрощённая версия без полной навигации
 
-2. **Touch-friendly элементы**
-   - Минимум 44x44px touch targets
-   - Увеличенные отступы между кликабельными элементами
-   - Swipe gestures для sidebar
-
-3. **Safe Area поддержка**
-   - `env(safe-area-inset-bottom)` для Bottom Nav
-   - `env(safe-area-inset-top)` для Header
+**Вариант B:** Оставить как есть (Header уже имеет hamburger menu)
 
 ---
 
 ## Файлы для изменения
 
-| # | Файл | Действие |
-|---|------|----------|
-| 1 | `src/index.css` | Удалить все infinite анимации, кроме очень медленных фоновых (60s+) |
-| 2 | `src/components/landing/GradientButton.tsx` | Статичный gradient вместо анимированного |
-| 3 | `src/components/landing/Hero.tsx` | Убрать фото, добавить mesh gradient фон |
-| 4 | `src/components/landing/Pricing.tsx` | Удалить infinite анимации декора |
-| 5 | `src/components/landing/AnimatedSection.tsx` | Удалить infinite из FloatingElement |
-| 6 | `src/components/DashboardLayout.tsx` | Убрать infinite, добавить BottomNavigation |
-| 7 | `src/pages/Dashboard.tsx` | Убрать shimmer infinite |
-| 8 | **NEW** `src/components/BottomNavigation.tsx` | Создать нижнюю навигацию |
-| 9 | `src/components/AppSidebar.tsx` | Скрыть на мобильных когда есть BottomNav |
-| 10 | `src/components/landing/Header.tsx` | Оптимизация для мобильных |
+| # | Файл | Изменения |
+|---|------|-----------|
+| 1 | `vite.config.ts` | Заменить `WeddingTech` → `Weddinguz` |
+| 2 | `index.html` | Заменить все упоминания `WeddingTech` → `Weddinguz` |
+| 3 | `src/components/landing/Hero.tsx` | Исправить отображение текста на мобильных |
+| 4 | `src/components/landing/Footer.tsx` | Удалить `animate-pulse`, заменить `WeddingTech UZ` → `Weddinguz` |
+| 5 | `src/components/landing/Header.tsx` | Заменить `WeddingTech` → `Weddinguz` |
+| 6 | `src/components/DashboardLayout.tsx` | Заменить `WeddingTech` → `Weddinguz` |
+| 7 | `src/components/AppSidebar.tsx` | Заменить `WeddingTech` → `Weddinguz` |
+| 8 | `src/pages/Auth.tsx` | Заменить `WeddingTech UZ` → `Weddinguz` |
+| 9 | `src/pages/Install.tsx` | Заменить `WeddingTech UZ` → `Weddinguz` |
+| 10 | `src/pages/WeddingWebsite.tsx` | Заменить `WeddingTech UZ` → `Weddinguz` |
+| 11 | `src/i18n/locales/en.json` | Заменить `WeddingTech UZ` → `Weddinguz` |
+| 12 | `src/i18n/locales/ru.json` | Заменить `WeddingTech UZ` → `Weddinguz` |
+| 13 | `supabase/functions/send-email-notification/index.ts` | Заменить в email шаблонах |
+| 14 | `supabase/functions/export-wedding-plan-pdf/index.ts` | Заменить в PDF |
+
+---
+
+## Техническая часть
+
+### Исправление TextReveal для мобильных
+
+Проверить компонент `TextReveal.tsx` - возможно анимация "съедает" текст на мобильных из-за viewport timing или intersection observer.
+
+Безопасное решение - условный рендер:
+
+```tsx
+// Проверка isMobile перед применением сложных анимаций
+{isMobile ? (
+  <span className={gradient ? "text-gradient-animated" : ""}>
+    {text}
+  </span>
+) : (
+  <TextReveal text={text} gradient={gradient} delay={delay} />
+)}
+```
+
+### Обновлённый логотип
+
+Предлагаю использовать стилизованный текстовый логотип:
+
+```tsx
+// Вместо Heart иконки - текстовый логотип
+<div className="flex items-center gap-2">
+  <div className="w-9 h-9 rounded-xl gradient-luxe flex items-center justify-center shadow-lg">
+    <span className="text-white font-bold text-lg">W</span>
+  </div>
+  <span className="text-xl font-bold text-gradient-animated">
+    Weddinguz
+  </span>
+</div>
+```
 
 ---
 
 ## Ожидаемый результат
 
 После внедрения:
-- **Никакого мигания/пульсации** — все кнопки и тексты статичны
-- **Только фоновые эффекты** — очень медленные (45-60s), почти незаметные
-- **Hero без фото** — чистый mesh gradient в стиле Apple/Stripe
-- **Мобильная версия как приложение** — нижняя навигация, компактный header, оптимизированные touch targets
-- **Плавный опыт** — 60 FPS даже на средних устройствах
+1. **Мобильная версия** - весь текст отображается корректно
+2. **Нет пульсирующих анимаций** - Footer без `animate-pulse`
+3. **Единый бренд "Weddinguz"** - везде консистентное название
+4. **Современный логотип** - стилизованная буква W или текстовый логотип
+5. **Оптимизированный UI** - всё читается и работает на мобильных устройствах
