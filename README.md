@@ -142,6 +142,20 @@ bun run test
 | [PAYMENT_SETUP.md](./PAYMENT_SETUP.md) | Настройка платежей |
 | [EMAIL_SETUP.md](./EMAIL_SETUP.md) | Настройка email |
 | [PWA_GUIDE.md](./PWA_GUIDE.md) | Руководство по PWA |
+| [DATABASE_SETUP.md](./database/DATABASE_SETUP.md) | 🗄️ Схема БД и self-hosting |
+
+## 🗄️ Self-Hosting базы данных
+
+Полная схема базы данных доступна для самостоятельного развёртывания:
+
+```bash
+# Применить схему на свой PostgreSQL 15+
+psql -U postgres -d weddinguz -f database/schema.sql
+```
+
+- **36 таблиц** + 1 view, 10 enums, 7 функций, 30 триггеров, 60+ RLS-политик
+- Подробное руководство: [`database/DATABASE_SETUP.md`](./database/DATABASE_SETUP.md)
+- ER-диаграмма, Docker Compose, инструкции по миграции
 
 ---
 

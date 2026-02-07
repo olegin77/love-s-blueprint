@@ -95,6 +95,24 @@ https://whrxhiyeysydhagrkjbe.supabase.co/functions/v1/payment-webhook?provider=a
 
 ---
 
+## Self-Hosted Database
+
+Полная схема базы данных доступна для развёртывания на собственном сервере:
+
+| Файл | Описание |
+|------|----------|
+| [`database/schema.sql`](./database/schema.sql) | Полный SQL-дамп (36 таблиц, триггеры, RLS) |
+| [`database/DATABASE_SETUP.md`](./database/DATABASE_SETUP.md) | Руководство по установке, ER-диаграмма, Docker |
+
+```bash
+# Быстрый старт
+psql -U postgres -d weddinguz -f database/schema.sql
+```
+
+Подробнее: [DATABASE_SETUP.md](./database/DATABASE_SETUP.md)
+
+---
+
 ## Custom Domain
 
 To connect a custom domain:
